@@ -11,8 +11,10 @@
 	<groupId>com.aditya</groupId>
 	<artifactId>f1hub</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>F1_HUB</name>>
+	<description>
+		Formula 1 Live Information And Analytics Platform
+	</description>
 	<url/>
 	<licenses>
 		<license/>
