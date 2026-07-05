@@ -22,6 +22,9 @@ public class ApiResponse<T> {
     @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
 
+    /**
+     * Success response with data
+     */
     public static <T> ApiResponse<T> success(String message, T data) {
         return ApiResponse.<T>builder()
                 .success(true)
@@ -30,11 +33,25 @@ public class ApiResponse<T> {
                 .build();
     }
 
+    /**
+     * Failure response without data
+     */
     public static <T> ApiResponse<T> failure(String message) {
         return ApiResponse.<T>builder()
                 .success(false)
                 .message(message)
                 .data(null)
+                .build();
+    }
+
+    /**
+     * Failure response with additional data
+     */
+    public static <T> ApiResponse<T> failure(String message, T data) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .message(message)
+                .data(data)
                 .build();
     }
 }
