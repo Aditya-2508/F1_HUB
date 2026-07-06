@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import com.aditya.f1hub.exception.ResourceNotFoundException;
+
 @Service
 @RequiredArgsConstructor
 public class DriverServiceImpl implements DriverService {
@@ -42,7 +44,7 @@ public class DriverServiceImpl implements DriverService {
 
         Driver driver = driverRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Driver not found with ID: " + id));
+                        new ResourceNotFoundException("Driver", "id", id));
 
         return driverMapper.toResponseDto(driver);
     }
