@@ -7,12 +7,20 @@ import com.aditya.f1hub.exception.ResourceAlreadyExistsException;
 import com.aditya.f1hub.mapper.DriverMapper;
 import com.aditya.f1hub.repository.DriverRepository;
 import com.aditya.f1hub.service.DriverService;
+import com.aditya.f1hub.specification.DriverSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 import com.aditya.f1hub.exception.ResourceNotFoundException;
+
+import com.aditya.f1hub.dto.common.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @Service
 @RequiredArgsConstructor
@@ -91,6 +99,47 @@ public class DriverServiceImpl implements DriverService {
 
         driverRepository.delete(driver);
 
+    }
+
+    @Override
+    public PageResponse<DriverResponseDto> searchDrivers(
+            String name,
+            String nationality,
+            Boolean active,
+            int page,
+            int size,
+            String sortBy,
+            String sortDirection) {
+
+        Sort sort = sortDirection.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Driver> specification = Specification.allOf(
+                DriverSpecification.hasName(name),
+                DriverSpecification.hasNationality(nationality),
+                DriverSpecification.isActive(active)
+        );
+
+        Page<Driver> driverPage =
+                driverRepository.findAll(specification, pageable);
+
+        return PageResponse.<DriverResponseDto>builder()
+                .content(
+                        driverPage.getContent()
+                                .stream()
+                                .map(driverMapper::toResponseDto)
+                                .toList()
+                )
+                .page(driverPage.getNumber())
+                .size(driverPage.getSize())
+                .totalElements(driverPage.getTotalElements())
+                .totalPages(driverPage.getTotalPages())
+                .first(driverPage.isFirst())
+                .last(driverPage.isLast())
+                .build();
     }
 
 }

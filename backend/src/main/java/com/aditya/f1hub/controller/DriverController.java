@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.aditya.f1hub.dto.common.PageResponse;
+
 @RestController
 @RequestMapping("/api/drivers")
 @RequiredArgsConstructor
@@ -86,6 +88,39 @@ public class DriverController {
                 ApiResponse.success(
                         "Driver deleted successfully.",
                         null
+                )
+        );
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PageResponse<DriverResponseDto>>> searchDrivers(
+
+            @RequestParam(required = false) String name,
+
+            @RequestParam(required = false) String nationality,
+
+            @RequestParam(required = false) Boolean active,
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "10") int size,
+
+            @RequestParam(defaultValue = "fullName") String sortBy,
+
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Drivers retrieved successfully.",
+                        driverService.searchDrivers(
+                                name,
+                                nationality,
+                                active,
+                                page,
+                                size,
+                                sortBy,
+                                sortDirection
+                        )
                 )
         );
     }
