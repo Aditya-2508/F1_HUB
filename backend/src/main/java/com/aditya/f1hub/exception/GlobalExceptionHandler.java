@@ -67,4 +67,12 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.failure("An unexpected error occurred."));
     }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceAlreadyExistsException(
+            ResourceAlreadyExistsException exception) {
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.failure(exception.getMessage()));
+    }
 }

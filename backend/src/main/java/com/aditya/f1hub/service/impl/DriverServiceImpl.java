@@ -3,6 +3,7 @@ package com.aditya.f1hub.service.impl;
 import com.aditya.f1hub.dto.driver.DriverRequestDto;
 import com.aditya.f1hub.dto.driver.DriverResponseDto;
 import com.aditya.f1hub.entity.Driver;
+import com.aditya.f1hub.exception.ResourceAlreadyExistsException;
 import com.aditya.f1hub.mapper.DriverMapper;
 import com.aditya.f1hub.repository.DriverRepository;
 import com.aditya.f1hub.service.DriverService;
@@ -22,6 +23,14 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public DriverResponseDto createDriver(DriverRequestDto requestDto) {
+
+        if (driverRepository.existsByExternalDriverId(requestDto.getExternalDriverId())) {
+            throw new ResourceAlreadyExistsException(
+                    "Driver",
+                    "externalDriverId",
+                    requestDto.getExternalDriverId()
+            );
+        }
 
         Driver driver = driverMapper.toEntity(requestDto);
 
