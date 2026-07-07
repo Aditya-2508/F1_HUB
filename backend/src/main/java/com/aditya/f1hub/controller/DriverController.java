@@ -76,4 +76,18 @@ public class DriverController {
         );
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteDriver(
+            @PathVariable Long id) {
+
+        driverService.deleteDriver(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Driver deleted successfully.",
+                        null
+                )
+        );
+    }
+
 }

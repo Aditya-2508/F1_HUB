@@ -82,4 +82,15 @@ public class DriverServiceImpl implements DriverService {
         return driverMapper.toResponseDto(updatedDriver);
     }
 
+    @Override
+    public void deleteDriver(Long id) {
+
+        Driver driver = driverRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Driver", "id", id));
+
+        driverRepository.delete(driver);
+
+    }
+
 }

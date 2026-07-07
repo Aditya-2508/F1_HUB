@@ -15,4 +15,6 @@ public interface DriverService {
 
     DriverResponseDto updateDriver(Long id, DriverRequestDto requestDto);
 
+    void deleteDriver(Long id);
+    
 }
