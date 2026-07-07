@@ -58,4 +58,28 @@ public class DriverServiceImpl implements DriverService {
         return driverMapper.toResponseDto(driver);
     }
 
+    @Override
+    public DriverResponseDto updateDriver(Long id, DriverRequestDto requestDto) {
+
+        Driver existingDriver = driverRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Driver", "id", id));
+
+        if (!existingDriver.getExternalDriverId().equals(requestDto.getExternalDriverId())
+                && driverRepository.existsByExternalDriverId(requestDto.getExternalDriverId())) {
+
+            throw new ResourceAlreadyExistsException(
+                    "Driver",
+                    "externalDriverId",
+                    requestDto.getExternalDriverId()
+            );
+        }
+
+        driverMapper.updateEntityFromDto(requestDto, existingDriver);
+
+        Driver updatedDriver = driverRepository.save(existingDriver);
+
+        return driverMapper.toResponseDto(updatedDriver);
+    }
+
 }

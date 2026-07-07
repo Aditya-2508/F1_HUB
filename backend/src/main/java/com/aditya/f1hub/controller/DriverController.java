@@ -60,4 +60,20 @@ public class DriverController {
         );
     }
 
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<DriverResponseDto>> updateDriver(
+            @PathVariable Long id,
+            @Valid @RequestBody DriverRequestDto requestDto) {
+
+        DriverResponseDto updatedDriver = driverService.updateDriver(id, requestDto);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Driver updated successfully.",
+                        updatedDriver
+                )
+        );
+    }
+
 }

@@ -32,6 +32,26 @@ public class DriverMapper {
                 .build();
     }
 
+
+    /**
+     * Updates an existing Driver entity using values from DriverRequestDto.
+     */
+    public void updateEntityFromDto(DriverRequestDto requestDto, Driver driver) {
+
+        driver.setExternalDriverId(requestDto.getExternalDriverId());
+        driver.setFirstName(requestDto.getFirstName());
+        driver.setLastName(requestDto.getLastName());
+        driver.setFullName(requestDto.getFullName());
+        driver.setDriverNumber(requestDto.getDriverNumber());
+        driver.setAbbreviation(requestDto.getAbbreviation());
+        driver.setNationality(requestDto.getNationality());
+        driver.setDateOfBirth(requestDto.getDateOfBirth());
+        driver.setProfileImageUrl(requestDto.getProfileImageUrl());
+        driver.setPermanentNumber(requestDto.getPermanentNumber());
+        driver.setActive(requestDto.getActive());
+
+    }
+
     /**
      * Converts Driver Entity to DriverResponseDto.
      */

@@ -13,4 +13,6 @@ public interface DriverService {
 
     DriverResponseDto getDriverById(Long id);
 
+    DriverResponseDto updateDriver(Long id, DriverRequestDto requestDto);
+
 }
