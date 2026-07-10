@@ -14,12 +14,16 @@ import java.util.List;
 
 import com.aditya.f1hub.dto.common.PageResponse;
 
+import com.aditya.f1hub.integration.dto.DriverSyncResponseDto;
+import com.aditya.f1hub.integration.service.DriverSyncService;
+
 @RestController
 @RequestMapping("/api/drivers")
 @RequiredArgsConstructor
 public class DriverController {
 
     private final DriverService driverService;
+    private final DriverSyncService driverSyncService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<DriverResponseDto>> createDriver(
@@ -125,4 +129,17 @@ public class DriverController {
         );
     }
 
+    @PostMapping("/sync")
+    public ResponseEntity<ApiResponse<DriverSyncResponseDto>> synchronizeDrivers() {
+
+        DriverSyncResponseDto response =
+                driverSyncService.synchronizeDrivers();
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Driver synchronization completed successfully.",
+                        response
+                )
+        );
+    }
 }
