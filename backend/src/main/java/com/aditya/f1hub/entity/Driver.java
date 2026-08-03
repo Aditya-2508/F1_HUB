@@ -31,12 +31,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "drivers")
-@EntityListeners(AuditingEntityListener.class)
-public class Driver {
+//@EntityListeners(AuditingEntityListener.class)
+public class Driver extends BaseEntity{
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+
 
     @Column(name = "external_driver_id", unique = true, nullable = false, length = 100)
     @NotBlank(message = "External driver ID is required.")
