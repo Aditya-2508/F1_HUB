@@ -8,6 +8,7 @@ import com.aditya.f1hub.mapper.DriverMapper;
 import com.aditya.f1hub.repository.DriverRepository;
 import com.aditya.f1hub.service.DriverService;
 import com.aditya.f1hub.specification.DriverSpecification;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Sort;
 
 @Service
 @RequiredArgsConstructor
+//@Transactional(readOnly = true)
 public class DriverServiceImpl implements DriverService {
 
     private final DriverRepository driverRepository;

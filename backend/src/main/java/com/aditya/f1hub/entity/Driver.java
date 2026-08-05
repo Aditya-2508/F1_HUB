@@ -17,12 +17,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+//import org.springframework.data.annotation.CreatedDate;
+//import org.springframework.data.annotation.LastModifiedDate;
+//import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+//import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -32,7 +32,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "drivers")
 //@EntityListeners(AuditingEntityListener.class)
-public class Driver extends BaseEntity{
+public class Driver extends BaseEntity {
 
 
 
@@ -65,14 +65,14 @@ public class Driver extends BaseEntity{
     @Size(min = 3, max = 3, message = "Abbreviation must contain exactly 3 characters.")
     private String abbreviation;
 
-    @Column(name = "nationality", nullable = false, length = 50)
-    @NotBlank(message = "Nationality is required.")
-    @Size(max = 50, message = "Nationality cannot exceed 50 characters.")
+    @Column(name = "nationality", length = 50)
+//    @NotBlank(message = "Nationality is required.")
+//    @Size(max = 50, message = "Nationality cannot exceed 50 characters.")
     private String nationality;
 
-    @Column(name = "date_of_birth", nullable = false)
-    @NotNull(message = "Date of birth is required.")
-    @Past(message = "Date of birth must be in the past.")
+    @Column(name = "date_of_birth")
+//    @NotNull(message = "Date of birth is required.")
+//    @Past(message = "Date of birth must be in the past.")
     private LocalDate dateOfBirth;
 
     @Column(name = "profile_image_url", length = 500)
@@ -87,12 +87,12 @@ public class Driver extends BaseEntity{
     @Builder.Default
     private Boolean active = true;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+//    @CreatedDate
+//    @Column(name = "created_at", nullable = false, updatable = false)
+//    private LocalDateTime createdAt;
+//
+//    @LastModifiedDate
+//    @Column(name = "updated_at", nullable = false)
+//    private LocalDateTime updatedAt;
 
 }

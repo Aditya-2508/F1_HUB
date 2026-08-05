@@ -22,7 +22,7 @@ import lombok.*;
 @Builder
 public class Constructor extends BaseEntity {
 
-    @Column(name = "external_constructor_id", nullable = false, unique = true)
+    @Column(name = "external_constructor_id", nullable = false)
     @NotBlank(message = "External constructor ID is required.")
     @Size(max = 100)
     private String externalConstructorId;

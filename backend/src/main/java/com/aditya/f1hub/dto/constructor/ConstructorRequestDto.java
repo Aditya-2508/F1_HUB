@@ -2,9 +2,12 @@ package com.aditya.f1hub.dto.constructor;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ConstructorRequestDto {
 
     @NotBlank(message = "External constructor ID is required.")

@@ -15,7 +15,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-@Builder
+//@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class DriverRequestDto {
@@ -55,6 +55,6 @@ public class DriverRequestDto {
     @Min(0)
     private Integer permanentNumber;
 
-    @Builder.Default
+
     private Boolean active = true;
 }
