@@ -1,5 +1,6 @@
 package com.aditya.f1hub.integration.client;
 
+import com.aditya.f1hub.integration.dto.OpenF1CircuitDto;
 import com.aditya.f1hub.integration.dto.OpenF1DriverDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,4 +28,12 @@ public class OpenF1Client {
                 .body(new ParameterizedTypeReference<List<OpenF1DriverDto>>() {});
     }
 
+
+    public List<OpenF1CircuitDto> getCircuits() {
+
+        return restClient.get()
+                .uri("/meetings")
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<OpenF1CircuitDto>>() {});
+    }
 }
