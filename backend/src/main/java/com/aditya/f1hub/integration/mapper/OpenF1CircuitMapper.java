@@ -14,11 +14,12 @@ public class OpenF1CircuitMapper {
         }
 
         return Circuit.builder()
-                .externalCircuitId(String.valueOf(dto.getMeetingKey()))
+                .externalCircuitId(String.valueOf(dto.getCircuitKey()))
                 .circuitName(dto.getCircuitShortName())
                 .location(dto.getLocation())
                 .country(dto.getCountryName())
                 .countryCode(dto.getCountryCode())
+                .imageUrl(dto.getCircuitImage())
                 .active(true)
                 .build();
     }

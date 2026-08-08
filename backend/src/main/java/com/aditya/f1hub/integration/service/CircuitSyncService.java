@@ -27,29 +27,50 @@ public class CircuitSyncService {
     @Transactional
     public CircuitSyncResponseDto synchronizeCircuits() {
 
-        List<OpenF1CircuitDto> circuitDtos = openF1Client.getCircuits();
+        List<OpenF1CircuitDto> circuitDtos =
+                openF1Client.getCircuits();
 
         int totalFetched = circuitDtos.size();
         int newCircuits = 0;
         int existingCircuits = 0;
         int failed = 0;
 
-        // Prevent duplicate meeting records in the same API response
         Set<String> processedCircuitIds = new HashSet<>();
 
         for (OpenF1CircuitDto dto : circuitDtos) {
 
             try {
 
-                String externalCircuitId = String.valueOf(dto.getMeetingKey());
+                if (dto.getCircuitKey() == null) {
+                    failed++;
 
-                // Skip duplicate records from the API response
+                    log.warn(
+                            "Skipping circuit because circuit_key is missing."
+                    );
+
+                    continue;
+                }
+
+                String externalCircuitId =
+                        String.valueOf(dto.getCircuitKey());
+
+                /*
+                 * The meetings endpoint can contain the same
+                 * circuit across multiple Grand Prix seasons.
+                 *
+                 * Prevent duplicate processing within
+                 * the current API response.
+                 */
                 if (!processedCircuitIds.add(externalCircuitId)) {
                     continue;
                 }
 
-                // Skip if already exists in database
-                if (circuitRepository.existsByExternalCircuitId(externalCircuitId)) {
+                /*
+                 * Check whether the circuit already exists
+                 * in our database.
+                 */
+                if (circuitRepository.existsByExternalCircuitId(
+                        externalCircuitId)) {
 
                     existingCircuits++;
                     continue;
@@ -61,8 +82,10 @@ public class CircuitSyncService {
 
                 newCircuits++;
 
-                log.info("Circuit synchronized successfully: {}",
-                        circuit.getCircuitName());
+                log.info(
+                        "Circuit synchronized successfully: {}",
+                        circuit.getCircuitName()
+                );
 
             } catch (Exception exception) {
 
@@ -77,7 +100,8 @@ public class CircuitSyncService {
         }
 
         log.info(
-                "Circuit synchronization completed. Total: {}, New: {}, Existing: {}, Failed: {}",
+                "Circuit synchronization completed. " +
+                        "Total: {}, New: {}, Existing: {}, Failed: {}",
                 totalFetched,
                 newCircuits,
                 existingCircuits,

@@ -10,8 +10,8 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OpenF1CircuitDto {
 
-    @JsonProperty("meeting_key")
-    private Integer meetingKey;
+    @JsonProperty("circuit_key")
+    private Integer circuitKey;
 
     @JsonProperty("circuit_short_name")
     private String circuitShortName;
@@ -24,4 +24,7 @@ public class OpenF1CircuitDto {
 
     @JsonProperty("country_code")
     private String countryCode;
+
+    @JsonProperty("circuit_image")
+    private String circuitImage;
 }

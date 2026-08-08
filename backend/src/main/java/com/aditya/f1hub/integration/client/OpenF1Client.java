@@ -19,6 +19,9 @@ public class OpenF1Client {
     @Value("${f1.api.base-url}")
     private String baseUrl;
 
+    /**
+     * Fetches all drivers from the OpenF1 API.
+     */
     public List<OpenF1DriverDto> getDrivers() {
 
         return restClient
@@ -28,11 +31,14 @@ public class OpenF1Client {
                 .body(new ParameterizedTypeReference<List<OpenF1DriverDto>>() {});
     }
 
-
+    /**
+     * Fetches all circuits from the OpenF1 API.
+     */
     public List<OpenF1CircuitDto> getCircuits() {
 
-        return restClient.get()
-                .uri("/meetings")
+        return restClient
+                .get()
+                .uri(baseUrl + "/meetings")
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<OpenF1CircuitDto>>() {});
     }

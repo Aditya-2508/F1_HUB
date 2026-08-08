@@ -3,6 +3,8 @@ package com.aditya.f1hub.controller;
 import com.aditya.f1hub.dto.ApiResponse;
 import com.aditya.f1hub.dto.circuit.CircuitRequestDto;
 import com.aditya.f1hub.dto.circuit.CircuitResponseDto;
+import com.aditya.f1hub.integration.dto.CircuitSyncResponseDto;
+import com.aditya.f1hub.integration.service.CircuitSyncService;
 import com.aditya.f1hub.service.CircuitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.List;
 public class CircuitController {
 
     private final CircuitService circuitService;
+    private final CircuitSyncService circuitSyncService;
 
     /**
      * Create Circuit
@@ -108,6 +111,19 @@ public class CircuitController {
                                 circuitName,
                                 country,
                                 active)));
+    }
+
+
+
+    @PostMapping("/sync")
+    public ResponseEntity<ApiResponse<CircuitSyncResponseDto>> syncCircuits() {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Circuit synchronization completed successfully.",
+                        circuitSyncService.synchronizeCircuits()
+                )
+        );
     }
 
 }
