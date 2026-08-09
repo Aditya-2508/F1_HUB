@@ -10,6 +10,11 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
+import com.aditya.f1hub.integration.dto.OpenF1RaceDto;
+import com.aditya.f1hub.integration.dto.OpenF1CircuitDto;
+import com.aditya.f1hub.integration.dto.OpenF1DriverDto;
+import com.aditya.f1hub.integration.dto.OpenF1RaceDto;
+
 @Component
 @RequiredArgsConstructor
 public class OpenF1Client {
@@ -41,5 +46,18 @@ public class OpenF1Client {
                 .uri(baseUrl + "/meetings")
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<OpenF1CircuitDto>>() {});
+    }
+
+    /**
+     * Fetches race meetings for a specific season year
+     * from the OpenF1 API.
+     */
+    public List<OpenF1RaceDto> getRaces(Integer year) {
+
+        return restClient
+                .get()
+                .uri(baseUrl + "/meetings?year=" + year)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<OpenF1RaceDto>>() {});
     }
 }
