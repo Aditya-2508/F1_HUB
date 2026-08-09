@@ -2,6 +2,8 @@ package com.aditya.f1hub.integration.client;
 
 import com.aditya.f1hub.integration.dto.OpenF1CircuitDto;
 import com.aditya.f1hub.integration.dto.OpenF1DriverDto;
+import com.aditya.f1hub.integration.dto.OpenF1RaceDto;
+import com.aditya.f1hub.integration.dto.OpenF1SessionDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -9,11 +11,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
-
-import com.aditya.f1hub.integration.dto.OpenF1RaceDto;
-import com.aditya.f1hub.integration.dto.OpenF1CircuitDto;
-import com.aditya.f1hub.integration.dto.OpenF1DriverDto;
-import com.aditya.f1hub.integration.dto.OpenF1RaceDto;
 
 @Component
 @RequiredArgsConstructor
@@ -33,7 +30,10 @@ public class OpenF1Client {
                 .get()
                 .uri(baseUrl + "/drivers")
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<OpenF1DriverDto>>() {});
+                .body(
+                        new ParameterizedTypeReference<
+                                List<OpenF1DriverDto>>() {}
+                );
     }
 
     /**
@@ -45,7 +45,10 @@ public class OpenF1Client {
                 .get()
                 .uri(baseUrl + "/meetings")
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<OpenF1CircuitDto>>() {});
+                .body(
+                        new ParameterizedTypeReference<
+                                List<OpenF1CircuitDto>>() {}
+                );
     }
 
     /**
@@ -58,6 +61,25 @@ public class OpenF1Client {
                 .get()
                 .uri(baseUrl + "/meetings?year=" + year)
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<OpenF1RaceDto>>() {});
+                .body(
+                        new ParameterizedTypeReference<
+                                List<OpenF1RaceDto>>() {}
+                );
+    }
+
+    /**
+     * Fetches sessions for a specific season year
+     * from the OpenF1 API.
+     */
+    public List<OpenF1SessionDto> getSessions(Integer year) {
+
+        return restClient
+                .get()
+                .uri(baseUrl + "/sessions?year=" + year)
+                .retrieve()
+                .body(
+                        new ParameterizedTypeReference<
+                                List<OpenF1SessionDto>>() {}
+                );
     }
 }
