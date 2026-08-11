@@ -135,4 +135,21 @@ public class ConstructorController {
         );
     }
 
+    @PostMapping("/sync/{sessionId}")
+    public ResponseEntity<ApiResponse<ConstructorSyncResponseDto>> synchronizeConstructorsBySession(
+            @PathVariable Long sessionId) {
+
+        ConstructorSyncResponseDto response =
+                constructorSyncService.synchronizeConstructors(
+                        sessionId
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Constructor synchronization completed successfully.",
+                        response
+                )
+        );
+    }
+
 }

@@ -28,4 +28,6 @@ public interface ConstructorService {
             String sortDirection
     );
 
+    //int synchronizeConstructors(Long sessionId);
+
 }

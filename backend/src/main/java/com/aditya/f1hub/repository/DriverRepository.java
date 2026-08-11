@@ -13,6 +13,7 @@ public interface DriverRepository extends JpaRepository<Driver, Long>,
 
     Optional<Driver> findByAbbreviation(String abbreviation);
 
-    boolean existsByExternalDriverId(String externalDriverId);
+    Optional<Driver> findByDriverNumber(Integer driverNumber);
 
+    boolean existsByExternalDriverId(String externalDriverId);
 }

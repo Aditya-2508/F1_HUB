@@ -4,10 +4,15 @@ import com.aditya.f1hub.dto.common.PageResponse;
 import com.aditya.f1hub.dto.constructor.ConstructorRequestDto;
 import com.aditya.f1hub.dto.constructor.ConstructorResponseDto;
 import com.aditya.f1hub.entity.Constructor;
+//import com.aditya.f1hub.entity.Session;
 import com.aditya.f1hub.exception.ResourceAlreadyExistsException;
 import com.aditya.f1hub.exception.ResourceNotFoundException;
+//import com.aditya.f1hub.integration.client.OpenF1Client;
+//import com.aditya.f1hub.integration.dto.OpenF1DriverDto;
+//import com.aditya.f1hub.integration.mapper.OpenF1ConstructorMapper;
 import com.aditya.f1hub.mapper.ConstructorMapper;
 import com.aditya.f1hub.repository.ConstructorRepository;
+//import com.aditya.f1hub.repository.SessionRepository;
 import com.aditya.f1hub.service.ConstructorService;
 import com.aditya.f1hub.specification.ConstructorSpecification;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +33,15 @@ public class ConstructorServiceImpl implements ConstructorService {
 
     private final ConstructorMapper constructorMapper;
 
+//    private final OpenF1Client openF1Client;
+
+//    private final OpenF1ConstructorMapper openF1ConstructorMapper;
+
+//    private final SessionRepository sessionRepository;
+
     @Override
-    public ConstructorResponseDto createConstructor(ConstructorRequestDto requestDto) {
+    public ConstructorResponseDto createConstructor(
+            ConstructorRequestDto requestDto) {
 
         if (constructorRepository.existsByExternalConstructorId(
                 requestDto.getExternalConstructorId())) {
@@ -62,13 +74,14 @@ public class ConstructorServiceImpl implements ConstructorService {
     @Override
     public ConstructorResponseDto getConstructorById(Long id) {
 
-        Constructor constructor = constructorRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Constructor",
-                                "id",
-                                id
-                        ));
+        Constructor constructor =
+                constructorRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Constructor",
+                                        "id",
+                                        id
+                                ));
 
         return constructorMapper.toResponseDto(constructor);
     }
@@ -78,13 +91,14 @@ public class ConstructorServiceImpl implements ConstructorService {
             Long id,
             ConstructorRequestDto requestDto) {
 
-        Constructor constructor = constructorRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Constructor",
-                                "id",
-                                id
-                        ));
+        Constructor constructor =
+                constructorRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Constructor",
+                                        "id",
+                                        id
+                                ));
 
         if (!constructor.getExternalConstructorId()
                 .equals(requestDto.getExternalConstructorId())
@@ -112,13 +126,14 @@ public class ConstructorServiceImpl implements ConstructorService {
     @Override
     public void deleteConstructor(Long id) {
 
-        Constructor constructor = constructorRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Constructor",
-                                "id",
-                                id
-                        ));
+        Constructor constructor =
+                constructorRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Constructor",
+                                        "id",
+                                        id
+                                ));
 
         constructorRepository.delete(constructor);
     }
@@ -162,11 +177,14 @@ public class ConstructorServiceImpl implements ConstructorService {
                 )
                 .page(constructorPage.getNumber())
                 .size(constructorPage.getSize())
-                .totalElements(constructorPage.getTotalElements())
-                .totalPages(constructorPage.getTotalPages())
+                .totalElements(
+                        constructorPage.getTotalElements()
+                )
+                .totalPages(
+                        constructorPage.getTotalPages()
+                )
                 .first(constructorPage.isFirst())
                 .last(constructorPage.isLast())
                 .build();
     }
-
 }
