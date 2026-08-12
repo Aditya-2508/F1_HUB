@@ -61,6 +61,27 @@ public class StandingsCalculationServiceImpl
                 seasonId
         );
 
+        for (RaceResult result : results) {
+
+            log.info(
+                    "Standings debug -> resultId={}, sessionType={}, driverId={}, constructorId={}, position={}, dns={}, dsq={}, championshipResult={}",
+                    result.getId(),
+                    result.getSession() != null
+                            ? result.getSession().getSessionType()
+                            : null,
+                    result.getDriver() != null
+                            ? result.getDriver().getId()
+                            : null,
+                    result.getConstructor() != null
+                            ? result.getConstructor().getId()
+                            : null,
+                    result.getPosition(),
+                    result.getDns(),
+                    result.getDsq(),
+                    pointsCalculationService.isChampionshipResult(result)
+            );
+        }
+
         DriverAggregation driverAggregation =
                 aggregateDrivers(results);
 
