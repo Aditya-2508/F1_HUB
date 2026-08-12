@@ -33,4 +33,6 @@ public interface DriverStandingRepository extends JpaRepository<DriverStanding, 
             Long seasonId,
             Long driverId
     );
+
+    void deleteBySeasonId(Long seasonId);
 }

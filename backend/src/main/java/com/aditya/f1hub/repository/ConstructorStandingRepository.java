@@ -33,4 +33,6 @@ public interface ConstructorStandingRepository extends JpaRepository<Constructor
             Long seasonId,
             Long constructorId
     );
+
+    void deleteBySeasonId(Long seasonId);
 }

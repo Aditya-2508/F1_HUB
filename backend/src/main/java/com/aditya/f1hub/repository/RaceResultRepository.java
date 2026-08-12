@@ -4,6 +4,10 @@ import com.aditya.f1hub.entity.RaceResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -42,5 +46,28 @@ public interface RaceResultRepository extends JpaRepository<RaceResult, Long> {
     boolean existsBySessionIdAndDriverId(
             Long sessionId,
             Long driverId
+    );
+
+    /**
+     * Finds all race results belonging to a specific season.
+     *
+     * Related Session, Race, Driver and Constructor entities
+     * are fetched together to avoid N+1 queries during
+     * standings calculation.
+     */
+    @Query("""
+        SELECT result
+        FROM RaceResult result
+        JOIN FETCH result.session session
+        JOIN FETCH session.race race
+        JOIN FETCH result.driver driver
+        JOIN FETCH result.constructor constructor
+        WHERE race.season.id = :seasonId
+        ORDER BY race.roundNumber ASC,
+                 session.startTime ASC,
+                 result.position ASC
+        """)
+    List<RaceResult> findAllBySeasonId(
+            @Param("seasonId") Long seasonId
     );
 }
