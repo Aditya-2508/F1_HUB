@@ -125,26 +125,111 @@ public class StandingsCalculationServiceImpl
                 data.incrementWins();
             }
 
-            data.recordPosition(result.getPosition());
+            data.recordPosition(
+                    result.getPosition(),
+                    result.getSession() != null
+                            ? result.getSession().getSessionType()
+                            : null
+            );
         }
 
         List<DriverStandingData> entries =
                 new ArrayList<>(standings.values());
 
         entries.sort(
-                Comparator
-                        .comparingDouble(
-                                DriverStandingData::points
-                        )
-                        .reversed()
-                        .thenComparing(
-                                Comparator.comparingInt(
-                                        DriverStandingData::wins
-                                ).reversed()
-                        )
+                this::compareDrivers
         );
 
         return new DriverAggregation(entries);
+    }
+
+    private int compareDrivers(
+            DriverStandingData first,
+            DriverStandingData second
+    ) {
+
+        int comparison =
+                Double.compare(
+                        second.points(),
+                        first.points()
+                );
+
+        if (comparison != 0) {
+            return comparison;
+        }
+
+        comparison =
+                Integer.compare(
+                        second.wins(),
+                        first.wins()
+                );
+
+        if (comparison != 0) {
+            return comparison;
+        }
+
+        int maxRacePosition =
+                Math.max(
+                        first.racePositionCounts.keySet()
+                                .stream()
+                                .mapToInt(Integer::intValue)
+                                .max()
+                                .orElse(0),
+                        second.racePositionCounts.keySet()
+                                .stream()
+                                .mapToInt(Integer::intValue)
+                                .max()
+                                .orElse(0)
+                );
+
+        for (int position = 2;
+             position <= maxRacePosition;
+             position++) {
+
+            comparison =
+                    Integer.compare(
+                            second.raceFinishesAt(position),
+                            first.raceFinishesAt(position)
+                    );
+
+            if (comparison != 0) {
+                return comparison;
+            }
+        }
+
+        int maxQualifyingPosition =
+                Math.max(
+                        first.qualifyingPositionCounts.keySet()
+                                .stream()
+                                .mapToInt(Integer::intValue)
+                                .max()
+                                .orElse(0),
+                        second.qualifyingPositionCounts.keySet()
+                                .stream()
+                                .mapToInt(Integer::intValue)
+                                .max()
+                                .orElse(0)
+                );
+
+        for (int position = 1;
+             position <= maxQualifyingPosition;
+             position++) {
+
+            comparison =
+                    Integer.compare(
+                            second.qualifyingFinishesAt(position),
+                            first.qualifyingFinishesAt(position)
+                    );
+
+            if (comparison != 0) {
+                return comparison;
+            }
+        }
+
+        return Long.compare(
+                first.driver().getId(),
+                second.driver().getId()
+        );
     }
 
     private ConstructorAggregation aggregateConstructors(
@@ -190,26 +275,82 @@ public class StandingsCalculationServiceImpl
                 data.incrementWins();
             }
 
-            data.recordPosition(result.getPosition());
+            data.recordPosition(
+                    result.getPosition(),
+                    result.getSession() != null
+                            ? result.getSession().getSessionType()
+                            : null
+            );
         }
 
         List<ConstructorStandingData> entries =
                 new ArrayList<>(standings.values());
 
         entries.sort(
-                Comparator
-                        .comparingDouble(
-                                ConstructorStandingData::points
-                        )
-                        .reversed()
-                        .thenComparing(
-                                Comparator.comparingInt(
-                                        ConstructorStandingData::wins
-                                ).reversed()
-                        )
+                this::compareConstructors
         );
 
         return new ConstructorAggregation(entries);
+    }
+
+    private int compareConstructors(
+            ConstructorStandingData first,
+            ConstructorStandingData second
+    ) {
+
+        int comparison =
+                Double.compare(
+                        second.points(),
+                        first.points()
+                );
+
+        if (comparison != 0) {
+            return comparison;
+        }
+
+        comparison =
+                Integer.compare(
+                        second.wins(),
+                        first.wins()
+                );
+
+        if (comparison != 0) {
+            return comparison;
+        }
+
+        int maxRacePosition =
+                Math.max(
+                        first.racePositionCounts.keySet()
+                                .stream()
+                                .mapToInt(Integer::intValue)
+                                .max()
+                                .orElse(0),
+                        second.racePositionCounts.keySet()
+                                .stream()
+                                .mapToInt(Integer::intValue)
+                                .max()
+                                .orElse(0)
+                );
+
+        for (int position = 2;
+             position <= maxRacePosition;
+             position++) {
+
+            comparison =
+                    Integer.compare(
+                            second.raceFinishesAt(position),
+                            first.raceFinishesAt(position)
+                    );
+
+            if (comparison != 0) {
+                return comparison;
+            }
+        }
+
+        return Long.compare(
+                first.constructor().getId(),
+                second.constructor().getId()
+        );
     }
 
     private void replaceDriverStandings(
@@ -287,8 +428,16 @@ public class StandingsCalculationServiceImpl
     private static class DriverStandingData {
 
         private final Driver driver;
+
         private double points;
+
         private int wins;
+
+        private final Map<Integer, Integer> racePositionCounts =
+                new HashMap<>();
+
+        private final Map<Integer, Integer> qualifyingPositionCounts =
+                new HashMap<>();
 
         private DriverStandingData(Driver driver) {
             this.driver = driver;
@@ -302,8 +451,41 @@ public class StandingsCalculationServiceImpl
             this.wins++;
         }
 
-        private void recordPosition(Integer position) {
-            // Reserved for championship countback support.
+        private void recordPosition(
+                Integer position,
+                String sessionType
+        ) {
+
+            if (position == null || position <= 0) {
+                return;
+            }
+
+            if (sessionType == null) {
+                return;
+            }
+
+            String normalizedType =
+                    sessionType.trim().toLowerCase();
+
+            if ("race".equals(normalizedType)) {
+
+                racePositionCounts.merge(
+                        position,
+                        1,
+                        Integer::sum
+                );
+
+                return;
+            }
+
+            if ("qualifying".equals(normalizedType)) {
+
+                qualifyingPositionCounts.merge(
+                        position,
+                        1,
+                        Integer::sum
+                );
+            }
         }
 
         private Driver driver() {
@@ -317,17 +499,36 @@ public class StandingsCalculationServiceImpl
         private int wins() {
             return wins;
         }
+
+        private int raceFinishesAt(int position) {
+            return racePositionCounts.getOrDefault(
+                    position,
+                    0
+            );
+        }
+
+        private int qualifyingFinishesAt(int position) {
+            return qualifyingPositionCounts.getOrDefault(
+                    position,
+                    0
+            );
+        }
     }
 
     private static class ConstructorStandingData {
 
         private final Constructor constructor;
+
         private double points;
+
         private int wins;
 
-        private ConstructorStandingData(
-                Constructor constructor) {
+        private final Map<Integer, Integer> racePositionCounts =
+                new HashMap<>();
 
+        private ConstructorStandingData(
+                Constructor constructor
+        ) {
             this.constructor = constructor;
         }
 
@@ -339,8 +540,30 @@ public class StandingsCalculationServiceImpl
             this.wins++;
         }
 
-        private void recordPosition(Integer position) {
-            // Reserved for championship countback support.
+        private void recordPosition(
+                Integer position,
+                String sessionType
+        ) {
+
+            if (position == null || position <= 0) {
+                return;
+            }
+
+            if (sessionType == null) {
+                return;
+            }
+
+            String normalizedType =
+                    sessionType.trim().toLowerCase();
+
+            if ("race".equals(normalizedType)) {
+
+                racePositionCounts.merge(
+                        position,
+                        1,
+                        Integer::sum
+                );
+            }
         }
 
         private Constructor constructor() {
@@ -353,6 +576,13 @@ public class StandingsCalculationServiceImpl
 
         private int wins() {
             return wins;
+        }
+
+        private int raceFinishesAt(int position) {
+            return racePositionCounts.getOrDefault(
+                    position,
+                    0
+            );
         }
     }
 }

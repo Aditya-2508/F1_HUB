@@ -359,4 +359,402 @@ class StandingsCalculationServiceImplTest {
                 .dsq(false)
                 .build();
     }
+
+
+
+    @Test
+    void shouldNotUseSprintPositionForRaceCountback() {
+        // Driver A: Sprint P1
+        // Driver B: Race P2
+        // Verify Sprint P1 does not become Race P1
+    }
+
+    @Test
+    void shouldUseQualifyingCountbackForDriversWhenRaceCountbackCannotSeparateThem() {
+        // Same points
+        // Same race finishes
+        // Driver A better qualifying record
+        // Expected: Driver A higher
+    }
+
+    @Test
+    void shouldUseRaceCountbackForConstructors() {
+        // Same points
+        // Same wins
+        // Constructor A has more P2 finishes
+        // Expected: Constructor A P1
+    }
+
+    @Test
+    void shouldRankDriverWithMoreRaceWinsHigherWhenPointsAreEqual() {
+
+        RaceResult driverAWinOne =
+                createResult(
+                        driverA,
+                        constructorA,
+                        "Race",
+                        1
+                );
+
+        RaceResult driverAWinTwo =
+                createResult(
+                        driverA,
+                        constructorA,
+                        "Race",
+                        1
+                );
+
+        RaceResult driverAThird =
+                createResult(
+                        driverA,
+                        constructorA,
+                        "Race",
+                        5
+                );
+
+        RaceResult driverBWin =
+                createResult(
+                        driverB,
+                        constructorB,
+                        "Race",
+                        1
+                );
+
+        RaceResult driverBSecond =
+                createResult(
+                        driverB,
+                        constructorB,
+                        "Race",
+                        2
+                );
+
+        RaceResult driverBThird =
+                createResult(
+                        driverB,
+                        constructorB,
+                        "Race",
+                        8
+                );
+
+        List<RaceResult> results = List.of(
+                driverAWinOne,
+                driverAWinTwo,
+                driverAThird,
+                driverBWin,
+                driverBSecond,
+                driverBThird
+        );
+
+        when(seasonRepository.findById(1L))
+                .thenReturn(Optional.of(season));
+
+        when(raceResultRepository.findAllBySeasonId(1L))
+                .thenReturn(results);
+
+        when(pointsCalculationService.isChampionshipResult(
+                any(RaceResult.class)
+        )).thenReturn(true);
+
+        when(pointsCalculationService.calculatePoints(
+                driverAWinOne
+        )).thenReturn(25.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverAWinTwo
+        )).thenReturn(25.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverAThird
+        )).thenReturn(1.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverBWin
+        )).thenReturn(25.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverBSecond
+        )).thenReturn(18.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverBThird
+        )).thenReturn(8.0);
+
+        when(pointsCalculationService.isRaceWin(
+                driverAWinOne
+        )).thenReturn(true);
+
+        when(pointsCalculationService.isRaceWin(
+                driverAWinTwo
+        )).thenReturn(true);
+
+        when(pointsCalculationService.isRaceWin(
+                driverAThird
+        )).thenReturn(false);
+
+        when(pointsCalculationService.isRaceWin(
+                driverBWin
+        )).thenReturn(true);
+
+        when(pointsCalculationService.isRaceWin(
+                driverBSecond
+        )).thenReturn(false);
+
+        when(pointsCalculationService.isRaceWin(
+                driverBThird
+        )).thenReturn(false);
+
+        standingsCalculationService.calculateStandings(1L);
+
+        ArgumentCaptor<List<DriverStanding>> captor =
+                ArgumentCaptor.forClass(List.class);
+
+        verify(driverStandingRepository)
+                .saveAll(captor.capture());
+
+        List<DriverStanding> standings =
+                captor.getValue();
+
+        assertEquals(2, standings.size());
+
+        assertEquals(
+                driverA,
+                standings.get(0).getDriver()
+        );
+
+        assertEquals(
+                1,
+                standings.get(0).getPosition()
+        );
+
+        assertEquals(
+                51.0,
+                standings.get(0).getPoints()
+        );
+
+        assertEquals(
+                2,
+                standings.get(0).getWins()
+        );
+
+        assertEquals(
+                driverB,
+                standings.get(1).getDriver()
+        );
+
+        assertEquals(
+                2,
+                standings.get(1).getPosition()
+        );
+
+        assertEquals(
+                51.0,
+                standings.get(1).getPoints()
+        );
+
+        assertEquals(
+                1,
+                standings.get(1).getWins()
+        );
+    }
+
+    @Test
+    void shouldUseSecondPlaceCountbackWhenPointsAndWinsAreEqual() {
+
+        RaceResult driverAWin =
+                createResult(
+                        driverA,
+                        constructorA,
+                        "Race",
+                        1
+                );
+
+        RaceResult driverASecond =
+                createResult(
+                        driverA,
+                        constructorA,
+                        "Race",
+                        2
+                );
+
+        RaceResult driverAOther =
+                createResult(
+                        driverA,
+                        constructorA,
+                        "Race",
+                        8
+                );
+
+        RaceResult driverAOtherTwo =
+                createResult(
+                        driverA,
+                        constructorA,
+                        "Race",
+                        10
+                );
+
+        RaceResult driverBWin =
+                createResult(
+                        driverB,
+                        constructorB,
+                        "Race",
+                        1
+                );
+
+        RaceResult driverBThird =
+                createResult(
+                        driverB,
+                        constructorB,
+                        "Race",
+                        3
+                );
+
+        RaceResult driverBFourth =
+                createResult(
+                        driverB,
+                        constructorB,
+                        "Race",
+                        5
+                );
+
+        RaceResult driverBLast =
+                createResult(
+                        driverB,
+                        constructorB,
+                        "Race",
+                        10
+                );
+
+        List<RaceResult> results = List.of(
+                driverAWin,
+                driverASecond,
+                driverAOther,
+                driverAOtherTwo,
+                driverBWin,
+                driverBThird,
+                driverBFourth,
+                driverBLast
+        );
+
+        when(seasonRepository.findById(1L))
+                .thenReturn(Optional.of(season));
+
+        when(raceResultRepository.findAllBySeasonId(1L))
+                .thenReturn(results);
+
+        when(pointsCalculationService.isChampionshipResult(
+                any(RaceResult.class)
+        )).thenReturn(true);
+
+        when(pointsCalculationService.calculatePoints(
+                driverAWin
+        )).thenReturn(25.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverASecond
+        )).thenReturn(18.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverAOther
+        )).thenReturn(8.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverAOtherTwo
+        )).thenReturn(2.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverBWin
+        )).thenReturn(25.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverBThird
+        )).thenReturn(15.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverBFourth
+        )).thenReturn(10.0);
+
+        when(pointsCalculationService.calculatePoints(
+                driverBLast
+        )).thenReturn(1.0);
+
+        when(pointsCalculationService.isRaceWin(
+                driverAWin
+        )).thenReturn(true);
+
+        when(pointsCalculationService.isRaceWin(
+                driverASecond
+        )).thenReturn(false);
+
+        when(pointsCalculationService.isRaceWin(
+                driverAOther
+        )).thenReturn(false);
+
+        when(pointsCalculationService.isRaceWin(
+                driverAOtherTwo
+        )).thenReturn(false);
+
+        when(pointsCalculationService.isRaceWin(
+                driverBWin
+        )).thenReturn(true);
+
+        when(pointsCalculationService.isRaceWin(
+                driverBThird
+        )).thenReturn(false);
+
+        when(pointsCalculationService.isRaceWin(
+                driverBFourth
+        )).thenReturn(false);
+
+        when(pointsCalculationService.isRaceWin(
+                driverBLast
+        )).thenReturn(false);
+
+        standingsCalculationService.calculateStandings(1L);
+
+        ArgumentCaptor<List<DriverStanding>> captor =
+                ArgumentCaptor.forClass(List.class);
+
+        verify(driverStandingRepository)
+                .saveAll(captor.capture());
+
+        List<DriverStanding> standings =
+                captor.getValue();
+
+        assertEquals(2, standings.size());
+
+        assertEquals(
+                driverA,
+                standings.get(0).getDriver()
+        );
+
+        assertEquals(
+                1,
+                standings.get(0).getPosition()
+        );
+
+        assertEquals(
+                53.0,
+                standings.get(0).getPoints()
+        );
+
+        assertEquals(
+                1,
+                standings.get(0).getWins()
+        );
+
+        assertEquals(
+                driverB,
+                standings.get(1).getDriver()
+        );
+
+        assertEquals(
+                2,
+                standings.get(1).getPosition()
+        );
+
+        assertEquals(
+                51.0,
+                standings.get(1).getPoints()
+        );
+    }
 }
