@@ -1,8 +1,12 @@
 package com.aditya.f1hub.repository;
 
 import com.aditya.f1hub.entity.Race;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -19,4 +23,22 @@ public interface RaceRepository extends
      * Check if External Meeting ID already exists
      */
     boolean existsByExternalMeetingId(String externalMeetingId);
+
+    /**
+     * Searches races by multiple user-facing fields.
+     *
+     * The search is case-insensitive and supports partial matching.
+     */
+    @Query("""
+            SELECT r
+            FROM Race r
+            WHERE LOWER(r.name) LIKE LOWER(CONCAT('%', :query, '%'))
+               OR LOWER(r.officialName) LIKE LOWER(CONCAT('%', :query, '%'))
+               OR LOWER(r.location) LIKE LOWER(CONCAT('%', :query, '%'))
+               OR LOWER(r.countryName) LIKE LOWER(CONCAT('%', :query, '%'))
+               OR LOWER(r.countryCode) LIKE LOWER(CONCAT('%', :query, '%'))
+            """)
+    Page<Race> search(
+            @Param("query") String query,
+            Pageable pageable);
 }
