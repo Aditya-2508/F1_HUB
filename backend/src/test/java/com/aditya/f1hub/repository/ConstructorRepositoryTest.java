@@ -9,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.aditya.f1hub.specification.ConstructorSpecification;
+import org.springframework.data.jpa.domain.Specification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -107,5 +109,107 @@ class ConstructorRepositoryTest {
 
         assertThat(result.getContent().size())
                 .isLessThanOrEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Should filter constructors by name")
+    void shouldFilterConstructorsByName() {
+
+        var specification =
+                ConstructorSpecification.hasName("ferrari");
+
+        var result =
+                constructorRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(constructor ->
+                        constructor.getName()
+                                .toLowerCase()
+                                .contains("ferrari"));
+    }
+
+    @Test
+    @DisplayName("Should filter constructors by nationality")
+    void shouldFilterConstructorsByNationality() {
+
+        var specification =
+                ConstructorSpecification.hasNationality("GBR");
+
+        var result =
+                constructorRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(constructor ->
+                        constructor.getNationality()
+                                .equalsIgnoreCase("GBR"));
+    }
+
+    @Test
+    @DisplayName("Should filter constructors by active status")
+    void shouldFilterConstructorsByActiveStatus() {
+
+        var specification =
+                ConstructorSpecification.isActive(true);
+
+        var result =
+                constructorRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(constructor ->
+                        Boolean.TRUE.equals(constructor.getActive()));
+    }
+
+    @Test
+    @DisplayName("Should filter constructors using multiple criteria")
+    void shouldFilterConstructorsUsingMultipleCriteria() {
+
+        var specification =
+                Specification.allOf(
+                        ConstructorSpecification.hasName("ferrari"),
+                        ConstructorSpecification.hasNationality("MON"),
+                        ConstructorSpecification.isActive(true));
+
+        var result =
+                constructorRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(constructor ->
+                        constructor.getName()
+                                .toLowerCase()
+                                .contains("ferrari")
+                                && constructor.getNationality()
+                                .equalsIgnoreCase("MON")
+                                && Boolean.TRUE.equals(constructor.getActive()));
+    }
+    @Test
+    @DisplayName("Should return all constructors when no filters are provided")
+    void shouldReturnAllConstructorsWhenNoFiltersAreProvided() {
+
+        var specification =
+                Specification.allOf(
+                        ConstructorSpecification.hasName(null),
+                        ConstructorSpecification.hasNationality(null),
+                        ConstructorSpecification.isActive(null));
+
+        var result =
+                constructorRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .hasSize(constructorRepository.findAll().size());
     }
 }

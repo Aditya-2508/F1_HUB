@@ -122,10 +122,10 @@ public class CircuitServiceImpl implements CircuitService {
             Boolean active) {
 
         Specification<Circuit> specification =
-                Specification.where(
-                                CircuitSpecification.hasCircuitName(circuitName))
-                        .and(CircuitSpecification.hasCountry(country))
-                        .and(CircuitSpecification.isActive(active));
+                Specification.allOf(
+                        CircuitSpecification.hasCircuitName(circuitName),
+                        CircuitSpecification.hasCountry(country),
+                        CircuitSpecification.isActive(active));
 
         return circuitRepository.findAll(specification)
                 .stream()

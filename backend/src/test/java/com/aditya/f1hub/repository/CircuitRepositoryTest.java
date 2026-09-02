@@ -9,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.aditya.f1hub.specification.CircuitSpecification;
+import org.springframework.data.jpa.domain.Specification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -106,5 +108,111 @@ class CircuitRepositoryTest {
 
         assertThat(result.getContent().size())
                 .isLessThanOrEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Should filter circuits by circuit name")
+    void shouldFilterCircuitsByCircuitName() {
+
+        var specification =
+                CircuitSpecification.hasCircuitName("monza");
+
+        var result =
+                circuitRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(circuit ->
+                        circuit.getCircuitName()
+                                .toLowerCase()
+                                .contains("monza"));
+    }
+
+    @Test
+    @DisplayName("Should filter circuits by country")
+    void shouldFilterCircuitsByCountry() {
+
+        var specification =
+                CircuitSpecification.hasCountry("italy");
+
+        var result =
+                circuitRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(circuit ->
+                        circuit.getCountry()
+                                .toLowerCase()
+                                .contains("italy"));
+    }
+
+
+    @Test
+    @DisplayName("Should filter circuits by active status")
+    void shouldFilterCircuitsByActiveStatus() {
+
+        var specification =
+                CircuitSpecification.isActive(true);
+
+        var result =
+                circuitRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(circuit ->
+                        Boolean.TRUE.equals(circuit.getActive()));
+    }
+
+    @Test
+    @DisplayName("Should filter circuits using multiple criteria")
+    void shouldFilterCircuitsUsingMultipleCriteria() {
+
+        var specification =
+                Specification.allOf(
+                        CircuitSpecification.hasCircuitName("monza"),
+                        CircuitSpecification.hasCountry("italy"),
+                        CircuitSpecification.isActive(true));
+
+        var result =
+                circuitRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(circuit ->
+                        circuit.getCircuitName()
+                                .toLowerCase()
+                                .contains("monza")
+                                && circuit.getCountry()
+                                .toLowerCase()
+                                .contains("italy")
+                                && Boolean.TRUE.equals(circuit.getActive()));
+    }
+
+    @Test
+    @DisplayName("Should return all circuits when no filters are provided")
+    void shouldReturnAllCircuitsWhenNoFiltersAreProvided() {
+
+        var specification =
+                Specification.allOf(
+                        CircuitSpecification.hasCircuitName(null),
+                        CircuitSpecification.hasCountry(null),
+                        CircuitSpecification.isActive(null));
+
+        var result =
+                circuitRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .hasSize(circuitRepository.findAll().size());
     }
 }

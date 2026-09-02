@@ -194,13 +194,13 @@ public class RaceServiceImpl implements RaceService {
             Boolean cancelled) {
 
         Specification<Race> specification =
-                Specification.where(
-                                RaceSpecification.hasName(name))
-                        .and(RaceSpecification.hasSeasonId(seasonId))
-                        .and(RaceSpecification.hasCircuitId(circuitId))
-                        .and(RaceSpecification.hasCountryName(countryName))
-                        .and(RaceSpecification.hasActive(active))
-                        .and(RaceSpecification.hasCancelled(cancelled));
+                Specification.allOf(
+                        RaceSpecification.hasName(name),
+                        RaceSpecification.hasSeasonId(seasonId),
+                        RaceSpecification.hasCircuitId(circuitId),
+                        RaceSpecification.hasCountryName(countryName),
+                        RaceSpecification.hasActive(active),
+                        RaceSpecification.hasCancelled(cancelled));
 
         return raceRepository.findAll(specification)
                 .stream()

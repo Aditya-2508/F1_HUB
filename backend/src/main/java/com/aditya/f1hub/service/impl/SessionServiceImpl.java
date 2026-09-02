@@ -175,21 +175,12 @@ public class SessionServiceImpl implements SessionService {
             Boolean cancelled) {
 
         Specification<Session> specification =
-                Specification.where(
-                                SessionSpecification
-                                        .hasSessionName(sessionName))
-                        .and(
-                                SessionSpecification
-                                        .hasSessionType(sessionType))
-                        .and(
-                                SessionSpecification
-                                        .hasRaceId(raceId))
-                        .and(
-                                SessionSpecification
-                                        .hasActive(active))
-                        .and(
-                                SessionSpecification
-                                        .hasCancelled(cancelled));
+                Specification.allOf(
+                        SessionSpecification.hasSessionName(sessionName),
+                        SessionSpecification.hasSessionType(sessionType),
+                        SessionSpecification.hasRaceId(raceId),
+                        SessionSpecification.hasActive(active),
+                        SessionSpecification.hasCancelled(cancelled));
 
         return sessionRepository.findAll(specification)
                 .stream()

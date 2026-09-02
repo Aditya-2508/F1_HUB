@@ -9,7 +9,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
+import com.aditya.f1hub.specification.RaceSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -106,5 +107,177 @@ class RaceRepositoryTest {
 
         assertThat(result.getContent().size())
                 .isLessThanOrEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Should return all races when no filters are provided")
+    void shouldReturnAllRacesWhenNoFiltersAreProvided() {
+
+        var specification =
+                Specification.allOf(
+                        RaceSpecification.hasName(null),
+                        RaceSpecification.hasSeasonId(null),
+                        RaceSpecification.hasCircuitId(null),
+                        RaceSpecification.hasCountryName(null),
+                        RaceSpecification.hasActive(null),
+                        RaceSpecification.hasCancelled(null));
+
+        var result =
+                raceRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .hasSize(raceRepository.findAll().size());
+    }
+
+    @Test
+    @DisplayName("Should filter races using multiple criteria")
+    void shouldFilterRacesUsingMultipleCriteria() {
+
+        var specification =
+                Specification.allOf(
+                        RaceSpecification.hasName("bahrain"),
+                        RaceSpecification.hasSeasonId(1L),
+                        RaceSpecification.hasCircuitId(2L),
+                        RaceSpecification.hasCountryName("bahrain"),
+                        RaceSpecification.hasActive(true),
+                        RaceSpecification.hasCancelled(true));
+
+        var result =
+                raceRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(race ->
+                        race.getName()
+                                .toLowerCase()
+                                .contains("bahrain")
+                                && race.getSeason() != null
+                                && race.getSeason().getId().equals(1L)
+                                && race.getCircuit() != null
+                                && race.getCircuit().getId().equals(2L)
+                                && race.getCountryName()
+                                .toLowerCase()
+                                .contains("bahrain")
+                                && Boolean.TRUE.equals(race.getActive())
+                                && Boolean.TRUE.equals(race.getCancelled()));
+    }
+
+    @Test
+    @DisplayName("Should filter races by cancelled status")
+    void shouldFilterRacesByCancelledStatus() {
+
+        var specification =
+                RaceSpecification.hasCancelled(true);
+
+        var result =
+                raceRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(race ->
+                        Boolean.TRUE.equals(race.getCancelled()));
+    }
+
+    @Test
+    @DisplayName("Should filter races by active status")
+    void shouldFilterRacesByActiveStatus() {
+
+        var specification =
+                RaceSpecification.hasActive(true);
+
+        var result =
+                raceRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(race ->
+                        Boolean.TRUE.equals(race.getActive()));
+    }
+
+    @Test
+    @DisplayName("Should filter races by country name")
+    void shouldFilterRacesByCountryName() {
+
+        var specification =
+                RaceSpecification.hasCountryName("bahrain");
+
+        var result =
+                raceRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(race ->
+                        race.getCountryName()
+                                .toLowerCase()
+                                .contains("bahrain"));
+    }
+
+    @Test
+    @DisplayName("Should filter races by circuit ID")
+    void shouldFilterRacesByCircuitId() {
+
+        var specification =
+                RaceSpecification.hasCircuitId(2L);
+
+        var result =
+                raceRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(race ->
+                        race.getCircuit() != null
+                                && race.getCircuit().getId().equals(2L));
+    }
+
+    @Test
+    @DisplayName("Should filter races by season ID")
+    void shouldFilterRacesBySeasonId() {
+
+        var specification =
+                RaceSpecification.hasSeasonId(1L);
+
+        var result =
+                raceRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(race ->
+                        race.getSeason() != null
+                                && race.getSeason().getId().equals(1L));
+    }
+
+    @Test
+    @DisplayName("Should filter races by name")
+    void shouldFilterRacesByName() {
+
+        var specification =
+                RaceSpecification.hasName("bahrain");
+
+        var result =
+                raceRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(race ->
+                        race.getName()
+                                .toLowerCase()
+                                .contains("bahrain"));
     }
 }

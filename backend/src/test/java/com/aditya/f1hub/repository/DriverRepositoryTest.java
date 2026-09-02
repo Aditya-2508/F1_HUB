@@ -10,6 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.test.context.ActiveProfiles;
+import com.aditya.f1hub.specification.DriverSpecification;
+import org.springframework.data.jpa.domain.Specification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -107,5 +109,108 @@ class DriverRepositoryTest {
 
         assertThat(result.getContent().size())
                 .isLessThanOrEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Should filter drivers by name")
+    void shouldFilterDriversByName() {
+
+        var specification =
+                DriverSpecification.hasName("verstappen");
+
+        var result =
+                driverRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(driver ->
+                        driver.getFullName()
+                                .toLowerCase()
+                                .contains("verstappen"));
+    }
+
+    @Test
+    @DisplayName("Should filter drivers by nationality")
+    void shouldFilterDriversByNationality() {
+
+        var specification =
+                DriverSpecification.hasNationality("british");
+
+        var result =
+                driverRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(driver ->
+                        driver.getNationality()
+                                .equalsIgnoreCase("british"));
+    }
+
+    @Test
+    @DisplayName("Should filter drivers by active status")
+    void shouldFilterDriversByActiveStatus() {
+
+        var specification =
+                DriverSpecification.isActive(true);
+
+        var result =
+                driverRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(driver ->
+                        Boolean.TRUE.equals(driver.getActive()));
+    }
+
+    @Test
+    @DisplayName("Should filter drivers using multiple criteria")
+    void shouldFilterDriversUsingMultipleCriteria() {
+
+        var specification =
+                Specification.allOf(
+                        DriverSpecification.hasName("verstappen"),
+                        DriverSpecification.hasNationality("dutch"),
+                        DriverSpecification.isActive(true));
+
+        var result =
+                driverRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .allMatch(driver ->
+                        driver.getFullName()
+                                .toLowerCase()
+                                .contains("verstappen")
+                                && driver.getNationality()
+                                .equalsIgnoreCase("dutch")
+                                && Boolean.TRUE.equals(driver.getActive()));
+    }
+
+    @Test
+    @DisplayName("Should return all drivers when no filters are provided")
+    void shouldReturnAllDriversWhenNoFiltersAreProvided() {
+
+        var specification =
+                Specification.allOf(
+                        DriverSpecification.hasName(null),
+                        DriverSpecification.hasNationality(null),
+                        DriverSpecification.isActive(null));
+
+        var result =
+                driverRepository.findAll(specification);
+
+        assertThat(result)
+                .isNotEmpty();
+
+        assertThat(result)
+                .hasSize(driverRepository.findAll().size());
     }
 }
