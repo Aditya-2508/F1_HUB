@@ -45,6 +45,9 @@ public class RaceSyncService {
             );
         }
 
+        /*
+         * Fetch race meetings for the requested season.
+         */
         List<OpenF1RaceDto> raceDtos =
                 openF1Client.getRaces(year);
 
@@ -53,6 +56,19 @@ public class RaceSyncService {
         int existingRaces = 0;
         int failed = 0;
 
+        /*
+         * Ensure the requested Season exists before
+         * processing dependent Race entities.
+         *
+         * The Season is resolved only once instead of
+         * querying the database for every race.
+         */
+        Season season = getOrCreateSeason(year);
+
+        /*
+         * Prevent duplicate processing if the same
+         * meeting appears more than once in the response.
+         */
         Set<String> processedMeetingIds = new HashSet<>();
 
         for (OpenF1RaceDto dto : raceDtos) {
@@ -82,6 +98,13 @@ public class RaceSyncService {
                  * meeting appears more than once in the response.
                  */
                 if (!processedMeetingIds.add(externalMeetingId)) {
+
+                    log.warn(
+                            "Skipping duplicate race in OpenF1 response. " +
+                                    "Meeting ID: {}",
+                            externalMeetingId
+                    );
+
                     continue;
                 }
 
@@ -122,21 +145,7 @@ public class RaceSyncService {
                 }
 
                 /*
-                 * Resolve the Season using the championship year.
-                 */
-                Season season =
-                        seasonRepository.findByYear(dto.getYear())
-                                .orElseThrow(() ->
-                                        new IllegalStateException(
-                                                "Season not found for year: "
-                                                        + dto.getYear()
-                                        )
-                                );
-
-                /*
                  * circuit_key identifies the actual circuit.
-                 *
-                 * It maps to:
                  *
                  * OpenF1 circuit_key
                  *        ↓
@@ -161,13 +170,15 @@ public class RaceSyncService {
                 Circuit circuit =
                         circuitRepository
                                 .findByExternalCircuitId(
-                                        externalCircuitId)
+                                        externalCircuitId
+                                )
                                 .orElseThrow(() ->
                                         new IllegalStateException(
                                                 "Circuit not found for " +
                                                         "externalCircuitId: "
                                                         + externalCircuitId
-                                        ));
+                                        )
+                                );
 
                 /*
                  * Find existing Race using the OpenF1
@@ -176,7 +187,8 @@ public class RaceSyncService {
                 Race existingRace =
                         raceRepository
                                 .findByExternalMeetingId(
-                                        externalMeetingId)
+                                        externalMeetingId
+                                )
                                 .orElse(null);
 
                 if (existingRace == null) {
@@ -255,5 +267,39 @@ public class RaceSyncService {
                 .existingRaces(existingRaces)
                 .failed(failed)
                 .build();
+    }
+
+    /**
+     * Finds an existing Season by year or creates it
+     * when it does not exist.
+     *
+     * This method is intentionally kept inside RaceSyncService
+     * because Season currently has no independent synchronization
+     * workflow in F1Hub.
+     *
+     * @param year season year
+     * @return existing or newly created Season
+     */
+    private Season getOrCreateSeason(Integer year) {
+
+        return seasonRepository.findByYear(year)
+                .orElseGet(() -> {
+
+                    Season season = new Season();
+
+                    season.setYear(year);
+                    season.setActive(true);
+
+                    Season savedSeason =
+                            seasonRepository.save(season);
+
+                    log.info(
+                            "Season created automatically during " +
+                                    "race synchronization: {}",
+                            year
+                    );
+
+                    return savedSeason;
+                });
     }
 }

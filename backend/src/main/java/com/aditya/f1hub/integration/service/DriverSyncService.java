@@ -16,20 +16,15 @@ import java.util.List;
 public class DriverSyncService {
 
     private final OpenF1Client openF1Client;
-
     private final OpenF1DriverMapper mapper;
-
     private final DriverRepository driverRepository;
 
     public DriverSyncResponseDto synchronizeDrivers() {
 
-        List<OpenF1DriverDto> drivers =
-                openF1Client.getDrivers();
+        List<OpenF1DriverDto> drivers = openF1Client.getDrivers();
 
         int inserted = 0;
-
         int existing = 0;
-
         int failed = 0;
 
         for (OpenF1DriverDto dto : drivers) {
@@ -42,12 +37,10 @@ public class DriverSyncService {
                         driver.getExternalDriverId())) {
 
                     existing++;
-
                     continue;
                 }
 
                 driverRepository.save(driver);
-
                 inserted++;
 
             } catch (Exception exception) {
@@ -55,8 +48,8 @@ public class DriverSyncService {
                 failed++;
 
             }
-
         }
+
 
         return DriverSyncResponseDto.builder()
                 .totalFetched(drivers.size())
@@ -65,5 +58,4 @@ public class DriverSyncService {
                 .failedDrivers(failed)
                 .build();
     }
-
 }

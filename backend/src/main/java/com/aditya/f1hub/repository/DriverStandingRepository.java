@@ -34,5 +34,10 @@ public interface DriverStandingRepository extends JpaRepository<DriverStanding, 
             Long driverId
     );
 
+    /**
+     * Counts the number of championship titles won by a driver.
+     */
+    long countByDriverIdAndPosition(Long driverId, Integer position);
+
     void deleteBySeasonId(Long seasonId);
 }

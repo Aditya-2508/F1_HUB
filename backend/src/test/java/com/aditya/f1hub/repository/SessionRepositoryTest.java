@@ -125,7 +125,7 @@ class SessionRepositoryTest {
     void shouldFilterSessionsByActiveStatus() {
 
         var specification =
-                SessionSpecification.isActive(true);
+                SessionSpecification.hasActive(true);
 
         var result =
                 sessionRepository.findAll(specification);

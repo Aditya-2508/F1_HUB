@@ -16,8 +16,8 @@ public final class RaceSpecification {
 
         return (root, query, criteriaBuilder) -> {
 
-            if (name == null || name.trim().isEmpty()) {
-                return null;
+            if (name == null || name.isBlank()) {
+                return criteriaBuilder.conjunction();
             }
 
             return criteriaBuilder.like(
@@ -35,7 +35,7 @@ public final class RaceSpecification {
         return (root, query, criteriaBuilder) -> {
 
             if (seasonId == null) {
-                return null;
+                return criteriaBuilder.conjunction();
             }
 
             return criteriaBuilder.equal(
@@ -53,7 +53,7 @@ public final class RaceSpecification {
         return (root, query, criteriaBuilder) -> {
 
             if (circuitId == null) {
-                return null;
+                return criteriaBuilder.conjunction();
             }
 
             return criteriaBuilder.equal(
@@ -70,8 +70,8 @@ public final class RaceSpecification {
 
         return (root, query, criteriaBuilder) -> {
 
-            if (countryName == null || countryName.trim().isEmpty()) {
-                return null;
+            if (countryName == null || countryName.isBlank()) {
+                return criteriaBuilder.conjunction();
             }
 
             return criteriaBuilder.like(
@@ -89,7 +89,7 @@ public final class RaceSpecification {
         return (root, query, criteriaBuilder) -> {
 
             if (active == null) {
-                return null;
+                return criteriaBuilder.conjunction();
             }
 
             return criteriaBuilder.equal(
@@ -107,7 +107,7 @@ public final class RaceSpecification {
         return (root, query, criteriaBuilder) -> {
 
             if (cancelled == null) {
-                return null;
+                return criteriaBuilder.conjunction();
             }
 
             return criteriaBuilder.equal(

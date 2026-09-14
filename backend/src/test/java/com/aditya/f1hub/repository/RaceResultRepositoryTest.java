@@ -82,4 +82,39 @@ class RaceResultRepositoryTest {
 
         assertThat(result).isEmpty();
     }
+
+    @Test
+    void shouldFindDriverCareerStatistics() {
+
+        DriverCareerStatisticsProjection statistics =
+                raceResultRepository.findDriverCareerStatistics(1L);
+
+        assertThat(statistics).isNotNull();
+
+        assertThat(statistics.getRaceWins())
+                .isNotNull()
+                .isGreaterThanOrEqualTo(0);
+
+        assertThat(statistics.getRacePodiums())
+                .isNotNull()
+                .isGreaterThanOrEqualTo(0);
+
+        assertThat(statistics.getQualifyingPoles())
+                .isNotNull()
+                .isGreaterThanOrEqualTo(0);
+
+        assertThat(statistics.getChampionshipPoints())
+                .isNotNull()
+                .isGreaterThanOrEqualTo(0.0);
+    }
+
+    @Test
+    void shouldCountDriverFastestLaps() {
+
+        long fastestLaps =
+                raceResultRepository.countDriverFastestLaps(1L);
+
+        assertThat(fastestLaps)
+                .isGreaterThanOrEqualTo(0);
+    }
 }
