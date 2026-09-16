@@ -20,6 +20,7 @@ import com.aditya.f1hub.repository.ConstructorRepository;
 import com.aditya.f1hub.repository.DriverRepository;
 import com.aditya.f1hub.repository.RaceResultRepository;
 import com.aditya.f1hub.repository.SessionRepository;
+import com.aditya.f1hub.service.PointsCalculationService;
 import com.aditya.f1hub.service.RaceResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ public class RaceResultServiceImpl implements RaceResultService {
     private final RaceResultMapper raceResultMapper;
     private final OpenF1Client openF1Client;
     private final OpenF1ConstructorMapper openF1ConstructorMapper;
+    private final PointsCalculationService pointsCalculationService;
 
     @Override
     @Transactional
@@ -475,6 +477,10 @@ public class RaceResultServiceImpl implements RaceResultService {
                     result,
                     lapDtos,
                     driverNumber
+            );
+
+            result.setPoints(
+                    pointsCalculationService.calculatePoints(result)
             );
 
             raceResultRepository.save(result);
