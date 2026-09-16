@@ -2,6 +2,8 @@ package com.aditya.f1hub.repository;
 
 import com.aditya.f1hub.entity.ConstructorStanding;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,4 +37,25 @@ public interface ConstructorStandingRepository extends JpaRepository<Constructor
     );
 
     void deleteBySeasonId(Long seasonId);
+
+    /**
+     * Retrieves aggregate championship statistics for a constructor.
+     */
+    @Query("""
+            SELECT
+                COUNT(CASE
+                    WHEN standing.position = 1
+                    THEN 1
+                END) AS championships,
+
+                COALESCE(SUM(standing.wins), 0) AS wins,
+
+                COALESCE(SUM(standing.points), 0.0) AS points
+
+            FROM ConstructorStanding standing
+            WHERE standing.constructor.id = :constructorId
+            """)
+    ConstructorStandingStatisticsProjection findConstructorStandingStatistics(
+            @Param("constructorId") Long constructorId
+    );
 }

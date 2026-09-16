@@ -117,4 +117,24 @@ class RaceResultRepositoryTest {
         assertThat(fastestLaps)
                 .isGreaterThanOrEqualTo(0);
     }
+
+    @Test
+    void shouldCountConstructorPodiums() {
+
+        long podiums =
+                raceResultRepository.countConstructorPodiums(1L);
+
+        assertThat(podiums)
+                .isGreaterThanOrEqualTo(0);
+    }
+
+    @Test
+    void shouldReturnZeroConstructorPodiumsWhenConstructorHasNoResults() {
+
+        long podiums =
+                raceResultRepository.countConstructorPodiums(999999L);
+
+        assertThat(podiums)
+                .isZero();
+    }
 }

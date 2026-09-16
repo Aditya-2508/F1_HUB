@@ -117,4 +117,22 @@ public interface RaceResultRepository
           )
         """)
     long countDriverFastestLaps(@Param("driverId") Long driverId);
+
+    /**
+     * Counts constructor podium finishes across race sessions.
+     *
+     * A podium is a race result with a finishing position
+     * from 1st through 3rd.
+     */
+    @Query("""
+        SELECT COUNT(result)
+        FROM RaceResult result
+        JOIN result.session session
+        WHERE result.constructor.id = :constructorId
+          AND LOWER(session.sessionType) = 'race'
+          AND result.position <= 3
+        """)
+    long countConstructorPodiums(
+            @Param("constructorId") Long constructorId
+    );
 }
