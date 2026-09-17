@@ -39,5 +39,7 @@ public interface DriverStandingRepository extends JpaRepository<DriverStanding, 
      */
     long countByDriverIdAndPosition(Long driverId, Integer position);
 
+    List<DriverStanding> findByDriverIdOrderBySeason_YearAsc(Long driverId);
+
     void deleteBySeasonId(Long seasonId);
 }

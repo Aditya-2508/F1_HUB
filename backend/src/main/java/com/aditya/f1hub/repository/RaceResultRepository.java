@@ -135,4 +135,41 @@ public interface RaceResultRepository
     long countConstructorPodiums(
             @Param("constructorId") Long constructorId
     );
+
+    @Query("""
+    SELECT
+        session.race.season.id AS seasonId,
+        COUNT(result) AS podiums
+    FROM RaceResult result
+    JOIN result.session session
+    WHERE result.driver.id = :driverId
+      AND LOWER(session.sessionType) = 'race'
+      AND result.position <= 3
+    GROUP BY session.race.season.id
+    """)
+    List<DriverSeasonPodiumProjection> findDriverSeasonPodiums(
+            @Param("driverId") Long driverId
+    );
+
+    @Query("""
+    SELECT
+        session.race.season.id AS seasonId,
+        COUNT(result) AS podiums
+    FROM RaceResult result
+    JOIN result.session session
+    WHERE result.driver.id = :driverId
+      AND LOWER(session.sessionType) = 'race'
+      AND result.position <= 3
+    GROUP BY session.race.season.id
+    """)
+    List<DriverSeasonPodiumProjection> findDriverPodiumsBySeason(
+            @Param("driverId") Long driverId
+    );
+
+    interface DriverSeasonPodiumProjection {
+
+        Long getSeasonId();
+
+        Long getPodiums();
+    }
 }
