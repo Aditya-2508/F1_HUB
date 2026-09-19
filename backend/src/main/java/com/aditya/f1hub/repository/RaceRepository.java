@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RaceRepository extends
@@ -41,4 +42,16 @@ public interface RaceRepository extends
     Page<Race> search(
             @Param("query") String query,
             Pageable pageable);
+
+    /**
+     * Finds championship races for a season.
+     *
+     * <p>
+     * Non-championship meetings such as pre-season testing have
+     * a null round number and are therefore excluded.
+     * </p>
+     */
+    List<Race> findBySeasonIdAndRoundNumberIsNotNullOrderByRoundNumberAsc(
+            Long seasonId
+    );
 }
