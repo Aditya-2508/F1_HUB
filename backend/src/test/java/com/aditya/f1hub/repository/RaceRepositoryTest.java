@@ -140,7 +140,7 @@ class RaceRepositoryTest {
                 Specification.allOf(
                         RaceSpecification.hasName("bahrain"),
                         RaceSpecification.hasSeasonId(1L),
-                        RaceSpecification.hasCircuitId(1L),
+                        RaceSpecification.hasCircuitId(2L),
                         RaceSpecification.hasCountryName("bahrain"),
                         RaceSpecification.hasActive(true),
                         RaceSpecification.hasCancelled(true));
@@ -159,7 +159,7 @@ class RaceRepositoryTest {
                                 && race.getSeason() != null
                                 && race.getSeason().getId().equals(1L)
                                 && race.getCircuit() != null
-                                && race.getCircuit().getId().equals(1L)
+                                && race.getCircuit().getId().equals(2L)
                                 && race.getCountryName()
                                 .toLowerCase()
                                 .contains("bahrain")

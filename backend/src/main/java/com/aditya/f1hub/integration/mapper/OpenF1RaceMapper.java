@@ -33,7 +33,6 @@ public class OpenF1RaceMapper {
                 .externalMeetingId(dto.getMeetingKey())
                 .name(dto.getMeetingName())
                 .officialName(dto.getMeetingOfficialName())
-                .roundNumber(null)
                 .weekendStart(parseDateTime(dto.getDateStart()))
                 .weekendEnd(parseDateTime(dto.getDateEnd()))
                 .location(dto.getLocation())

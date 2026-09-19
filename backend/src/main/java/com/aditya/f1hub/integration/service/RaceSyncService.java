@@ -15,8 +15,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -32,6 +36,11 @@ public class RaceSyncService {
 
     /**
      * Synchronizes Race data from OpenF1 for a specific season year.
+     *
+     * <p>
+     * Race round numbers are derived from the chronological order
+     * of valid OpenF1 race meetings.
+     * </p>
      *
      * @param year season year to synchronize
      * @return synchronization summary
@@ -64,6 +73,38 @@ public class RaceSyncService {
          * querying the database for every race.
          */
         Season season = getOrCreateSeason(year);
+
+        /*
+         * Sort race meetings chronologically.
+         *
+         * OpenF1 date_start values contain an offset, therefore
+         * OffsetDateTime is used instead of plain String sorting.
+         */
+        raceDtos = raceDtos.stream()
+                .sorted(
+                        Comparator.comparing(
+                                dto -> parseDateStart(dto.getDateStart()),
+                                Comparator.nullsLast(
+                                        Comparator.naturalOrder()
+                                )
+                        )
+                )
+                .toList();
+
+        /*
+         * Calculate round numbers based on chronological order.
+         *
+         * Example:
+         *
+         * Australian GP  -> Round 1
+         * Chinese GP     -> Round 2
+         * Japanese GP    -> Round 3
+         *
+         * Duplicate meeting IDs are ignored so that one meeting
+         * cannot consume multiple round numbers.
+         */
+        Map<String, Integer> roundNumberByMeetingId =
+                calculateRoundNumbers(raceDtos);
 
         /*
          * Prevent duplicate processing if the same
@@ -181,6 +222,31 @@ public class RaceSyncService {
                                 );
 
                 /*
+                 * Find calculated round number.
+                 *
+                 * A valid meeting should always have a round number.
+                 */
+                Integer roundNumber =
+                        roundNumberByMeetingId.get(externalMeetingId);
+
+                boolean nonChampionshipMeeting =
+                        isNonChampionshipMeeting(dto);
+
+                if (!nonChampionshipMeeting && roundNumber == null) {
+
+                    failed++;
+
+                    log.warn(
+                            "Skipping race because round number " +
+                                    "could not be calculated. " +
+                                    "Meeting ID: {}",
+                            externalMeetingId
+                    );
+
+                    continue;
+                }
+
+                /*
                  * Find existing Race using the OpenF1
                  * meeting_key.
                  */
@@ -203,13 +269,21 @@ public class RaceSyncService {
                                     circuit
                             );
 
+                    /*
+                     * Round number is derived by F1Hub,
+                     * not supplied by OpenF1.
+                     */
+                    race.setRoundNumber(roundNumber);
+
                     raceRepository.save(race);
 
                     newRaces++;
 
                     log.info(
-                            "Race synchronized successfully: {}",
-                            race.getName()
+                            "Race synchronized successfully: {} " +
+                                    "(Round {})",
+                            race.getName(),
+                            roundNumber
                     );
 
                 } else {
@@ -218,8 +292,7 @@ public class RaceSyncService {
                      * Update existing Race.
                      *
                      * The mapper updates only fields controlled
-                     * by OpenF1. Internal F1Hub fields such as
-                     * active and roundNumber are preserved.
+                     * by OpenF1.
                      */
                     raceMapper.updateEntityFromDto(
                             dto,
@@ -228,13 +301,24 @@ public class RaceSyncService {
                             circuit
                     );
 
+                    /*
+                     * Round number is a F1Hub-derived field.
+                     *
+                     * It is recalculated during synchronization
+                     * so existing records with null or stale
+                     * round numbers are corrected automatically.
+                     */
+                    existingRace.setRoundNumber(roundNumber);
+
                     raceRepository.save(existingRace);
 
                     existingRaces++;
 
                     log.info(
-                            "Race already exists and was updated: {}",
-                            existingRace.getName()
+                            "Race already exists and was updated: {} " +
+                                    "(Round {})",
+                            existingRace.getName(),
+                            roundNumber
                     );
                 }
 
@@ -270,12 +354,89 @@ public class RaceSyncService {
     }
 
     /**
+     * Calculates chronological round numbers for race meetings.
+     *
+     * <p>
+     * The first unique meeting in chronological order receives
+     * round 1, the second receives round 2, and so on.
+     * </p>
+     *
+     * @param raceDtos OpenF1 race meetings
+     * @return mapping of external meeting ID to round number
+     */
+    private Map<String, Integer> calculateRoundNumbers(
+            List<OpenF1RaceDto> raceDtos
+    ) {
+        Map<String, Integer> roundNumbers = new HashMap<>();
+
+        int roundNumber = 1;
+
+        for (OpenF1RaceDto dto : raceDtos) {
+
+            if (dto == null || dto.getMeetingKey() == null) {
+                continue;
+            }
+
+            if (isNonChampionshipMeeting(dto)) {
+                continue;
+            }
+
+            roundNumbers.put(
+                    String.valueOf(dto.getMeetingKey()),
+                    roundNumber
+            );
+
+            roundNumber++;
+        }
+
+        return roundNumbers;
+    }
+
+    private boolean isNonChampionshipMeeting(OpenF1RaceDto dto) {
+        return dto.getMeetingName() != null
+                && dto.getMeetingName().trim()
+                .equalsIgnoreCase("Pre-Season Testing");
+    }
+
+    /**
+     * Parses OpenF1 date_start into OffsetDateTime.
+     *
+     * <p>
+     * Invalid or missing dates return null so that the
+     * synchronization process can continue safely.
+     * </p>
+     *
+     * @param dateStart OpenF1 date_start value
+     * @return parsed date-time or null
+     */
+    private OffsetDateTime parseDateStart(String dateStart) {
+
+        if (dateStart == null || dateStart.isBlank()) {
+            return null;
+        }
+
+        try {
+            return OffsetDateTime.parse(dateStart);
+        } catch (Exception exception) {
+
+            log.warn(
+                    "Unable to parse race date_start: {}",
+                    dateStart
+            );
+
+            return null;
+        }
+    }
+
+    /**
      * Finds an existing Season by year or creates it
      * when it does not exist.
      *
+     * <p>
      * This method is intentionally kept inside RaceSyncService
      * because Season currently has no independent synchronization
      * workflow in F1Hub.
+     * </p>
      *
      * @param year season year
      * @return existing or newly created Season

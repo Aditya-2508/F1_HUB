@@ -166,6 +166,22 @@ public interface RaceResultRepository
             @Param("driverId") Long driverId
     );
 
+    @Query("""
+    SELECT result
+    FROM RaceResult result
+    JOIN FETCH result.session session
+    JOIN FETCH session.race race
+    JOIN FETCH result.driver driver
+    JOIN FETCH result.constructor constructor
+    WHERE race.id = :raceId
+      AND LOWER(session.sessionType) = 'race'
+      AND LOWER(session.sessionName) = 'race'
+    ORDER BY result.position ASC
+    """)
+    List<RaceResult> findRaceResultsByRaceId(
+            @Param("raceId") Long raceId
+    );
+
     interface DriverSeasonPodiumProjection {
 
         Long getSeasonId();
