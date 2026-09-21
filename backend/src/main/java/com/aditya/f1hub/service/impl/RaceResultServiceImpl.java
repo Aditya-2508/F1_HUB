@@ -27,12 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import java.util.Locale;
-import java.util.Optional;
-
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -305,15 +303,6 @@ public class RaceResultServiceImpl implements RaceResultService {
         List<OpenF1SessionResultDto> resultDtos =
                 openF1Client.getSessionResults(sessionKey);
 
-        List<OpenF1StartingGridDto> startingGridDtos =
-                openF1Client.getStartingGrid(sessionKey);
-
-        List<OpenF1DriverDto> driverDtos =
-                openF1Client.getDrivers(sessionKey);
-
-        List<OpenF1LapDto> lapDtos =
-                openF1Client.getLaps(sessionKey);
-
         if (resultDtos == null || resultDtos.isEmpty()) {
 
             log.info(
@@ -328,6 +317,17 @@ public class RaceResultServiceImpl implements RaceResultService {
                     .updatedCount(0)
                     .build();
         }
+
+        List<OpenF1StartingGridDto> startingGridDtos =
+                openF1Client.getStartingGrid(sessionKey);
+
+        List<OpenF1DriverDto> driverDtos =
+                openF1Client.getDrivers(sessionKey);
+
+        List<OpenF1LapDto> lapDtos =
+                shouldFetchLapData(session)
+                        ? openF1Client.getLaps(sessionKey)
+                        : List.of();
 
         Map<Integer, OpenF1StartingGridDto> startingGridByDriver =
                 startingGridDtos == null
@@ -413,6 +413,10 @@ public class RaceResultServiceImpl implements RaceResultService {
                                     externalDriverId
                             ));
 
+            // Update the driver's current F1 number
+            // using the session-specific OpenF1 data.
+            updateDriverNumber(driver, driverNumber);
+
             if (driverDto.getTeamName() == null
                     || driverDto.getTeamName().isBlank()) {
 
@@ -449,6 +453,7 @@ public class RaceResultServiceImpl implements RaceResultService {
                                     session.getId(),
                                     driver.getId()
                             );
+
             RaceResult result;
 
             if (existingResult.isPresent()) {
@@ -507,6 +512,52 @@ public class RaceResultServiceImpl implements RaceResultService {
                 .updatedCount(updatedCount)
                 .build();
     }
+
+    /**
+     * Updates the driver's current racing number using
+     * session-specific OpenF1 data.
+     *
+     * This is intentionally handled during result synchronization
+     * because the OpenF1 session endpoint provides the driver number
+     * associated with that specific session.
+     */
+    private void updateDriverNumber(
+            Driver driver,
+            Integer driverNumber) {
+
+        if (driver == null || driverNumber == null) {
+            return;
+        }
+
+        if (!driverNumber.equals(driver.getDriverNumber())) {
+
+            driver.setDriverNumber(driverNumber);
+
+            driverRepository.save(driver);
+
+            log.debug(
+                    "Driver number updated: abbreviation={}, number={}",
+                    driver.getAbbreviation(),
+                    driverNumber
+            );
+        }
+    }
+
+    private boolean shouldFetchLapData(Session session) {
+
+        if (session == null || session.getSessionType() == null) {
+            return false;
+        }
+
+        String sessionType =
+                session.getSessionType()
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+
+        return "race".equals(sessionType)
+                || "sprint".equals(sessionType);
+    }
+
     private RaceResult buildEntity(
             RaceResultRequest request,
             Session session,

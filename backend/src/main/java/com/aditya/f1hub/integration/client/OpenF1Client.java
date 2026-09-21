@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 
 @Slf4j
@@ -28,21 +30,26 @@ public class OpenF1Client {
     private String baseUrl;
 
     /*
-     * OpenF1 allows a maximum of approximately 3 requests per second.
+     * OpenF1 enforces a maximum of approximately
+     * 30 requests per minute.
      *
-     * We therefore keep a small delay between requests and also retry
-     * requests when OpenF1 explicitly responds with HTTP 429.
+     * Rate-limit handling is intentionally kept inside
+     * the integration layer so that business services
+     * do not need to know about OpenF1's HTTP limitations.
      *
-     * This keeps rate-limit handling inside the integration layer instead
-     * of leaking external API concerns into business services.
+     * The request timestamps are maintained in a sliding
+     * one-minute window.
      */
-    private static final long MIN_REQUEST_INTERVAL_MILLIS = 350L;
+    private static final int MAX_REQUESTS_PER_MINUTE = 30;
+
+    private static final long RATE_LIMIT_WINDOW_MILLIS = 60_000L;
 
     private static final int MAX_RETRIES = 3;
 
-    private static final long INITIAL_RETRY_DELAY_MILLIS = 1000L;
+    private static final long INITIAL_RETRY_DELAY_MILLIS = 1_000L;
 
-    private long lastRequestTime = 0L;
+    private final Deque<Long> requestTimestamps =
+            new ArrayDeque<>();
 
     /**
      * Fetches all drivers from the OpenF1 API.
@@ -123,25 +130,40 @@ public class OpenF1Client {
     /**
      * Fetches driver results for a specific session
      * from the OpenF1 API.
+     *
+     * A 404 response means that OpenF1 currently has
+     * no results for the requested session.
      */
     public List<OpenF1SessionResultDto> getSessionResults(
             Long sessionKey) {
 
-        return executeWithRetry(
-                () -> restClient
-                        .get()
-                        .uri(
-                                baseUrl
-                                        + "/session_result?session_key="
-                                        + sessionKey
-                        )
-                        .retrieve()
-                        .body(
-                                new ParameterizedTypeReference<
-                                        List<OpenF1SessionResultDto>>() {
-                                }
-                        )
-        );
+        try {
+
+            return executeWithRetry(
+                    () -> restClient
+                            .get()
+                            .uri(
+                                    baseUrl
+                                            + "/session_result?session_key="
+                                            + sessionKey
+                            )
+                            .retrieve()
+                            .body(
+                                    new ParameterizedTypeReference<
+                                            List<OpenF1SessionResultDto>>() {
+                                    }
+                            )
+            );
+
+        } catch (HttpClientErrorException.NotFound exception) {
+
+            log.info(
+                    "No session results found for OpenF1 session: {}",
+                    sessionKey
+            );
+
+            return List.of();
+        }
     }
 
     /**
@@ -231,15 +253,22 @@ public class OpenF1Client {
     }
 
     /**
-     * Executes an OpenF1 API request while protecting the application
-     * against provider rate limiting.
+     * Executes an OpenF1 API request while protecting
+     * the application against provider rate limiting.
      *
      * Strategy:
      *
-     * 1. Keep a minimum interval between outgoing requests.
-     * 2. Retry HTTP 429 responses.
-     * 3. Use exponential backoff between retries.
-     * 4. Immediately propagate other HTTP errors.
+     * 1. Allow a maximum of 30 requests in any
+     *    rolling 60-second window.
+     *
+     * 2. Wait before sending a request when the
+     *    current window is full.
+     *
+     * 3. Retry HTTP 429 responses.
+     *
+     * 4. Use exponential backoff between retries.
+     *
+     * 5. Immediately propagate other HTTP errors.
      */
     private <T> T executeWithRetry(
             OpenF1Request<T> request) {
@@ -274,9 +303,9 @@ public class OpenF1Client {
                                 * (1L << (attempt - 1));
 
                 log.warn(
-                        "OpenF1 rate limit reached. " +
-                                "Retrying request. Attempt {}/{}. " +
-                                "Waiting {} ms.",
+                        "OpenF1 rate limit reached. "
+                                + "Retrying request. Attempt {}/{}. "
+                                + "Waiting {} ms.",
                         attempt,
                         MAX_RETRIES,
                         retryDelay
@@ -288,35 +317,71 @@ public class OpenF1Client {
     }
 
     /**
-     * Ensures that requests are not sent faster than the configured
-     * minimum interval.
+     * Ensures that no more than 30 requests are sent
+     * during any rolling 60-second window.
      *
-     * This is intentionally synchronized because multiple application
-     * threads could access the same OpenF1Client instance.
+     * This method is synchronized because OpenF1Client
+     * is a singleton Spring component and multiple
+     * application threads may use the same client.
      */
     private synchronized void waitForRateLimit() {
 
-        long currentTime = System.currentTimeMillis();
+        while (true) {
 
-        long elapsedTime =
-                currentTime - lastRequestTime;
+            long currentTime =
+                    System.currentTimeMillis();
 
-        long remainingDelay =
-                MIN_REQUEST_INTERVAL_MILLIS - elapsedTime;
+            /*
+             * Remove requests that are older than
+             * the current one-minute window.
+             */
+            while (!requestTimestamps.isEmpty()
+                    && currentTime
+                    - requestTimestamps.peekFirst()
+                    >= RATE_LIMIT_WINDOW_MILLIS) {
 
-        if (remainingDelay > 0) {
+                requestTimestamps.removeFirst();
+            }
 
-            sleep(remainingDelay);
+            /*
+             * A new request can be sent if fewer than
+             * 30 requests exist in the current window.
+             */
+            if (requestTimestamps.size()
+                    < MAX_REQUESTS_PER_MINUTE) {
+
+                requestTimestamps.addLast(currentTime);
+
+                return;
+            }
+
+            /*
+             * The request limit has been reached.
+             * Calculate exactly how long we need to wait
+             * until the oldest request leaves the window.
+             */
+            long oldestRequestTime =
+                    requestTimestamps.peekFirst();
+
+            long waitTime =
+                    RATE_LIMIT_WINDOW_MILLIS
+                            - (currentTime - oldestRequestTime);
+
+            log.debug(
+                    "OpenF1 rate limit reached. "
+                            + "Waiting {} ms before next request.",
+                    waitTime
+            );
+
+            sleep(waitTime);
         }
-
-        lastRequestTime = System.currentTimeMillis();
     }
 
     /**
      * Safely sleeps for the specified duration.
      *
-     * Interrupted threads restore their interrupted status and fail
-     * instead of silently ignoring interruption.
+     * Interrupted threads restore their interrupted status
+     * and fail instead of silently ignoring interruption.
      */
     private void sleep(long milliseconds) {
 

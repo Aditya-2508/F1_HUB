@@ -8,8 +8,10 @@ import com.aditya.f1hub.integration.mapper.OpenF1DriverMapper;
 import com.aditya.f1hub.repository.DriverRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,43 +21,105 @@ public class DriverSyncService {
     private final OpenF1DriverMapper mapper;
     private final DriverRepository driverRepository;
 
+    @Transactional
     public DriverSyncResponseDto synchronizeDrivers() {
 
-        List<OpenF1DriverDto> drivers = openF1Client.getDrivers();
+        List<OpenF1DriverDto> drivers =
+                openF1Client.getDrivers();
 
         int inserted = 0;
-        int existing = 0;
+        int updated = 0;
         int failed = 0;
 
         for (OpenF1DriverDto dto : drivers) {
 
             try {
 
-                Driver driver = mapper.toEntity(dto);
+                Driver incomingDriver =
+                        mapper.toEntity(dto);
 
-                if (driverRepository.existsByExternalDriverId(
-                        driver.getExternalDriverId())) {
-
-                    existing++;
+                if (incomingDriver == null
+                        || incomingDriver.getExternalDriverId() == null) {
+                    failed++;
                     continue;
                 }
 
-                driverRepository.save(driver);
-                inserted++;
+                Optional<Driver> existingDriver =
+                        driverRepository.findByExternalDriverId(
+                                incomingDriver.getExternalDriverId()
+                        );
+
+                if (existingDriver.isPresent()) {
+
+                    updateExistingDriver(
+                            existingDriver.get(),
+                            incomingDriver
+                    );
+
+                    driverRepository.save(
+                            existingDriver.get()
+                    );
+
+                    updated++;
+
+                } else {
+
+                    driverRepository.save(
+                            incomingDriver
+                    );
+
+                    inserted++;
+                }
 
             } catch (Exception exception) {
 
                 failed++;
-
             }
         }
-
 
         return DriverSyncResponseDto.builder()
                 .totalFetched(drivers.size())
                 .newDrivers(inserted)
-                .existingDrivers(existing)
+                .existingDrivers(updated)
                 .failedDrivers(failed)
                 .build();
+    }
+
+    private void updateExistingDriver(
+            Driver existingDriver,
+            Driver incomingDriver
+    ) {
+
+        existingDriver.setDriverNumber(
+                incomingDriver.getDriverNumber()
+        );
+
+        existingDriver.setFirstName(
+                incomingDriver.getFirstName()
+        );
+
+        existingDriver.setLastName(
+                incomingDriver.getLastName()
+        );
+
+        existingDriver.setFullName(
+                incomingDriver.getFullName()
+        );
+
+        existingDriver.setAbbreviation(
+                incomingDriver.getAbbreviation()
+        );
+
+        existingDriver.setNationality(
+                incomingDriver.getNationality()
+        );
+
+        existingDriver.setProfileImageUrl(
+                incomingDriver.getProfileImageUrl()
+        );
+
+        existingDriver.setActive(
+                incomingDriver.getActive()
+        );
     }
 }

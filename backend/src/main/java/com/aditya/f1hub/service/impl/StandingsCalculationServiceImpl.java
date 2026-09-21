@@ -150,6 +150,9 @@ public class StandingsCalculationServiceImpl
                     result.getPosition(),
                     result.getSession() != null
                             ? result.getSession().getSessionType()
+                            : null,
+                    result.getSession() != null
+                            ? result.getSession().getSessionName()
                             : null
             );
         }
@@ -300,6 +303,9 @@ public class StandingsCalculationServiceImpl
                     result.getPosition(),
                     result.getSession() != null
                             ? result.getSession().getSessionType()
+                            : null,
+                    result.getSession() != null
+                            ? result.getSession().getSessionName()
                             : null
             );
         }
@@ -382,6 +388,8 @@ public class StandingsCalculationServiceImpl
                 season.getId()
         );
 
+        driverStandingRepository.flush();
+
         List<DriverStanding> standings =
                 new ArrayList<>();
 
@@ -412,6 +420,8 @@ public class StandingsCalculationServiceImpl
         constructorStandingRepository.deleteBySeasonId(
                 season.getId()
         );
+
+        constructorStandingRepository.flush();
 
         List<ConstructorStanding> standings =
                 new ArrayList<>();
@@ -474,21 +484,33 @@ public class StandingsCalculationServiceImpl
 
         private void recordPosition(
                 Integer position,
-                String sessionType
+                String sessionType,
+                String sessionName
         ) {
 
             if (position == null || position <= 0) {
                 return;
             }
 
-            if (sessionType == null) {
+            if (sessionType == null || sessionName == null) {
                 return;
             }
 
-            String normalizedType =
+            String normalizedSessionType =
                     sessionType.trim().toLowerCase();
 
-            if ("race".equals(normalizedType)) {
+            String normalizedSessionName =
+                    sessionName.trim().toLowerCase();
+
+            /*
+             * Only actual Grand Prix races are considered
+             * race finishes for championship tie-breaking.
+             *
+             * Sprint sessions must not be treated as
+             * Grand Prix race finishes.
+             */
+            if ("race".equals(normalizedSessionType)
+                    && "race".equals(normalizedSessionName)) {
 
                 racePositionCounts.merge(
                         position,
@@ -499,7 +521,7 @@ public class StandingsCalculationServiceImpl
                 return;
             }
 
-            if ("qualifying".equals(normalizedType)) {
+            if ("qualifying".equals(normalizedSessionType)) {
 
                 qualifyingPositionCounts.merge(
                         position,
@@ -508,7 +530,6 @@ public class StandingsCalculationServiceImpl
                 );
             }
         }
-
         private Driver driver() {
             return driver;
         }
@@ -563,21 +584,26 @@ public class StandingsCalculationServiceImpl
 
         private void recordPosition(
                 Integer position,
-                String sessionType
+                String sessionType,
+                String sessionName
         ) {
 
             if (position == null || position <= 0) {
                 return;
             }
 
-            if (sessionType == null) {
+            if (sessionType == null || sessionName == null) {
                 return;
             }
 
-            String normalizedType =
+            String normalizedSessionType =
                     sessionType.trim().toLowerCase();
 
-            if ("race".equals(normalizedType)) {
+            String normalizedSessionName =
+                    sessionName.trim().toLowerCase();
+
+            if ("race".equals(normalizedSessionType)
+                    && "race".equals(normalizedSessionName)) {
 
                 racePositionCounts.merge(
                         position,

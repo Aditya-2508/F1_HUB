@@ -20,11 +20,15 @@ class PointsCalculationServiceImplTest {
                 new PointsCalculationServiceImpl();
     }
 
+    // ---------------------------------------------------------
+    // GRAND PRIX RACE POINTS
+    // ---------------------------------------------------------
+
     @Test
     void shouldAwardTwentyFivePointsForRaceWinner() {
 
         RaceResult result =
-                createResult("Race", 1);
+                createResult("Race", "Race", 1);
 
         assertEquals(
                 25.0,
@@ -36,7 +40,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardEighteenPointsForRaceSecondPlace() {
 
         RaceResult result =
-                createResult("Race", 2);
+                createResult("Race", "Race", 2);
 
         assertEquals(
                 18.0,
@@ -48,7 +52,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardOnePointForRaceTenthPlace() {
 
         RaceResult result =
-                createResult("Race", 10);
+                createResult("Race", "Race", 10);
 
         assertEquals(
                 1.0,
@@ -60,7 +64,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardZeroPointsForRaceEleventhPlace() {
 
         RaceResult result =
-                createResult("Race", 11);
+                createResult("Race", "Race", 11);
 
         assertEquals(
                 0.0,
@@ -68,11 +72,15 @@ class PointsCalculationServiceImplTest {
         );
     }
 
+    // ---------------------------------------------------------
+    // SPRINT POINTS
+    // ---------------------------------------------------------
+
     @Test
     void shouldAwardEightPointsForSprintWinner() {
 
         RaceResult result =
-                createResult("Sprint", 1);
+                createResult("Race", "Sprint", 1);
 
         assertEquals(
                 8.0,
@@ -84,7 +92,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardSevenPointsForSprintSecondPlace() {
 
         RaceResult result =
-                createResult("Sprint", 2);
+                createResult("Race", "Sprint", 2);
 
         assertEquals(
                 7.0,
@@ -96,7 +104,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardOnePointForSprintEighthPlace() {
 
         RaceResult result =
-                createResult("Sprint", 8);
+                createResult("Race", "Sprint", 8);
 
         assertEquals(
                 1.0,
@@ -108,7 +116,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardZeroPointsForSprintNinthPlace() {
 
         RaceResult result =
-                createResult("Sprint", 9);
+                createResult("Race", "Sprint", 9);
 
         assertEquals(
                 0.0,
@@ -116,11 +124,15 @@ class PointsCalculationServiceImplTest {
         );
     }
 
+    // ---------------------------------------------------------
+    // NON-CHAMPIONSHIP SESSIONS
+    // ---------------------------------------------------------
+
     @Test
     void shouldAwardZeroPointsForPractice() {
 
         RaceResult result =
-                createResult("Practice", 1);
+                createResult("Practice", "Practice", 1);
 
         assertEquals(
                 0.0,
@@ -132,7 +144,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardZeroPointsForQualifying() {
 
         RaceResult result =
-                createResult("Qualifying", 1);
+                createResult("Qualifying", "Qualifying", 1);
 
         assertEquals(
                 0.0,
@@ -140,11 +152,15 @@ class PointsCalculationServiceImplTest {
         );
     }
 
+    // ---------------------------------------------------------
+    // SPECIAL RESULT CONDITIONS
+    // ---------------------------------------------------------
+
     @Test
     void shouldAwardZeroPointsForDns() {
 
         RaceResult result =
-                createResult("Race", 1);
+                createResult("Race", "Race", 1);
 
         result.setDns(true);
 
@@ -158,7 +174,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardZeroPointsForDsq() {
 
         RaceResult result =
-                createResult("Race", 1);
+                createResult("Race", "Race", 1);
 
         result.setDsq(true);
 
@@ -172,7 +188,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardZeroPointsForNullPosition() {
 
         RaceResult result =
-                createResult("Race", null);
+                createResult("Race", "Race", null);
 
         assertEquals(
                 0.0,
@@ -184,7 +200,7 @@ class PointsCalculationServiceImplTest {
     void shouldAwardZeroPointsForInvalidPosition() {
 
         RaceResult result =
-                createResult("Race", 0);
+                createResult("Race", "Race", 0);
 
         assertEquals(
                 0.0,
@@ -205,7 +221,7 @@ class PointsCalculationServiceImplTest {
     void shouldTreatDnfAsPotentiallyScoringResult() {
 
         RaceResult result =
-                createResult("Race", 2);
+                createResult("Race", "Race", 2);
 
         result.setDnf(true);
 
@@ -215,11 +231,15 @@ class PointsCalculationServiceImplTest {
         );
     }
 
+    // ---------------------------------------------------------
+    // CHAMPIONSHIP RESULT IDENTIFICATION
+    // ---------------------------------------------------------
+
     @Test
     void shouldIdentifyRaceAsChampionshipResult() {
 
         RaceResult result =
-                createResult("Race", 1);
+                createResult("Race", "Race", 1);
 
         assertTrue(
                 pointsCalculationService
@@ -231,7 +251,7 @@ class PointsCalculationServiceImplTest {
     void shouldIdentifySprintAsChampionshipResult() {
 
         RaceResult result =
-                createResult("Sprint", 1);
+                createResult("Race", "Sprint", 1);
 
         assertTrue(
                 pointsCalculationService
@@ -243,7 +263,7 @@ class PointsCalculationServiceImplTest {
     void shouldNotIdentifyPracticeAsChampionshipResult() {
 
         RaceResult result =
-                createResult("Practice", 1);
+                createResult("Practice", "Practice", 1);
 
         assertFalse(
                 pointsCalculationService
@@ -255,7 +275,7 @@ class PointsCalculationServiceImplTest {
     void shouldNotIdentifyQualifyingAsChampionshipResult() {
 
         RaceResult result =
-                createResult("Qualifying", 1);
+                createResult("Qualifying", "Qualifying", 1);
 
         assertFalse(
                 pointsCalculationService
@@ -263,11 +283,15 @@ class PointsCalculationServiceImplTest {
         );
     }
 
+    // ---------------------------------------------------------
+    // RACE WIN IDENTIFICATION
+    // ---------------------------------------------------------
+
     @Test
     void shouldIdentifyRaceWinner() {
 
         RaceResult result =
-                createResult("Race", 1);
+                createResult("Race", "Race", 1);
 
         assertTrue(
                 pointsCalculationService
@@ -279,7 +303,7 @@ class PointsCalculationServiceImplTest {
     void shouldNotIdentifyRaceSecondPlaceAsWinner() {
 
         RaceResult result =
-                createResult("Race", 2);
+                createResult("Race", "Race", 2);
 
         assertFalse(
                 pointsCalculationService
@@ -291,7 +315,7 @@ class PointsCalculationServiceImplTest {
     void shouldNotIdentifySprintWinnerAsRaceWinner() {
 
         RaceResult result =
-                createResult("Sprint", 1);
+                createResult("Race", "Sprint", 1);
 
         assertFalse(
                 pointsCalculationService
@@ -303,7 +327,7 @@ class PointsCalculationServiceImplTest {
     void shouldNotIdentifyQualifyingWinnerAsRaceWinner() {
 
         RaceResult result =
-                createResult("Qualifying", 1);
+                createResult("Qualifying", "Qualifying", 1);
 
         assertFalse(
                 pointsCalculationService
@@ -311,13 +335,19 @@ class PointsCalculationServiceImplTest {
         );
     }
 
+    // ---------------------------------------------------------
+    // TEST DATA BUILDER
+    // ---------------------------------------------------------
+
     private RaceResult createResult(
             String sessionType,
+            String sessionName,
             Integer position
     ) {
 
         Session session = Session.builder()
                 .sessionType(sessionType)
+                .sessionName(sessionName)
                 .build();
 
         return RaceResult.builder()

@@ -341,12 +341,18 @@ class StandingsCalculationServiceImplTest {
     private RaceResult createResult(
             Driver driver,
             Constructor constructor,
-            String sessionType,
+            String sessionName,
             Integer position
     ) {
 
+        String sessionType =
+                "Sprint".equalsIgnoreCase(sessionName)
+                        ? "Race"
+                        : sessionName;
+
         Session session = Session.builder()
                 .sessionType(sessionType)
+                .sessionName(sessionName)
                 .build();
 
         return RaceResult.builder()

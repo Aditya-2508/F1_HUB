@@ -1,6 +1,7 @@
 package com.aditya.f1hub.service.impl;
 
 import com.aditya.f1hub.entity.RaceResult;
+import com.aditya.f1hub.entity.Session;
 import com.aditya.f1hub.service.PointsCalculationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,18 +63,18 @@ public class PointsCalculationServiceImpl
             return 0.0;
         }
 
-        String sessionType = normalizeSessionType(
-                raceResult.getSession() != null
-                        ? raceResult.getSession().getSessionType()
-                        : null
-        );
-
-        if (isSprintSession(sessionType)) {
-            return SPRINT_POINTS.getOrDefault(position, 0.0);
+        if (isSprintSession(raceResult)) {
+            return SPRINT_POINTS.getOrDefault(
+                    position,
+                    0.0
+            );
         }
 
-        if (isRaceSession(sessionType)) {
-            return RACE_POINTS.getOrDefault(position, 0.0);
+        if (isRaceSession(raceResult)) {
+            return RACE_POINTS.getOrDefault(
+                    position,
+                    0.0
+            );
         }
 
         return 0.0;
@@ -82,22 +83,20 @@ public class PointsCalculationServiceImpl
     @Override
     public boolean isChampionshipResult(RaceResult raceResult) {
 
-        if (raceResult == null || raceResult.getSession() == null) {
+        if (raceResult == null
+                || raceResult.getSession() == null) {
             return false;
         }
 
-        String sessionType = normalizeSessionType(
-                raceResult.getSession().getSessionType()
-        );
-
-        return isRaceSession(sessionType)
-                || isSprintSession(sessionType);
+        return isRaceSession(raceResult)
+                || isSprintSession(raceResult);
     }
 
     @Override
     public boolean isRaceWin(RaceResult raceResult) {
 
-        if (raceResult == null || raceResult.getSession() == null) {
+        if (raceResult == null
+                || raceResult.getSession() == null) {
             return false;
         }
 
@@ -112,30 +111,81 @@ public class PointsCalculationServiceImpl
             return false;
         }
 
-        String sessionType = normalizeSessionType(
-                raceResult.getSession().getSessionType()
-        );
-
-        return isRaceSession(sessionType);
+        /*
+         * A Grand Prix win requires an actual Race session.
+         *
+         * A Sprint victory must never be counted as
+         * a Grand Prix race win.
+         */
+        return isRaceSession(raceResult);
     }
 
-    private boolean isRaceSession(String sessionType) {
+    /**
+     * Determines whether the supplied result belongs to
+     * the main Grand Prix race.
+     *
+     * OpenF1 may represent the Sprint as:
+     *
+     * sessionType = "Race"
+     * sessionName = "Sprint"
+     *
+     * Therefore sessionType alone is not sufficient.
+     */
+    private boolean isRaceSession(RaceResult raceResult) {
 
-        return "race".equals(sessionType);
+        Session session = raceResult.getSession();
+
+        if (session == null) {
+            return false;
+        }
+
+        String sessionType =
+                normalizeSessionValue(
+                        session.getSessionType()
+                );
+
+        String sessionName =
+                normalizeSessionValue(
+                        session.getSessionName()
+                );
+
+        return "race".equals(sessionType)
+                && "race".equals(sessionName);
     }
 
-    private boolean isSprintSession(String sessionType) {
+    /**
+     * Determines whether the supplied result belongs
+     * to a Sprint session.
+     */
+    private boolean isSprintSession(RaceResult raceResult) {
 
-        return "sprint".equals(sessionType);
+        Session session = raceResult.getSession();
+
+        if (session == null) {
+            return false;
+        }
+
+        String sessionType =
+                normalizeSessionValue(
+                        session.getSessionType()
+                );
+
+        String sessionName =
+                normalizeSessionValue(
+                        session.getSessionName()
+                );
+
+        return "race".equals(sessionType)
+                && "sprint".equals(sessionName);
     }
 
-    private String normalizeSessionType(String sessionType) {
+    private String normalizeSessionValue(String value) {
 
-        if (sessionType == null || sessionType.isBlank()) {
+        if (value == null || value.isBlank()) {
             return "";
         }
 
-        return sessionType
+        return value
                 .trim()
                 .toLowerCase(Locale.ROOT);
     }
